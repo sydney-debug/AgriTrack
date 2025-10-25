@@ -22,12 +22,39 @@ const farmVetAssociationsRoutes = require('./routes/farmVetAssociations');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security middleware
+// CORS Configuration
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, Postman, etc.)
+        if (!origin) return callback(null, true);
+
+        // Allow your specific Vercel domain
+        const allowedOrigins = [
+            'https://agri-track-virid.vercel.app',
+            'http://localhost:8080',
+            'http://localhost:3000'
+        ];
+
+        // Also allow environment variable override
+        const envOrigin = process.env.CORS_ORIGIN;
+        if (envOrigin && envOrigin !== '*') {
+            allowedOrigins.push(envOrigin);
+        }
+
+        if (allowedOrigins.indexOf(origin) !== -1 || envOrigin === '*') {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+};
+
+// Explicit OPTIONS handler for CORS preflight
+app.options('*', cors(corsOptions));
 app.use(helmet());
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:8080',
-  credentials: true
-}));
 
 // Rate limiting
 const limiter = rateLimit({
