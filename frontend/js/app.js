@@ -126,33 +126,31 @@ function buildSidebarMenu(role) {
 
     const menuItems = {
         farmer: [
-            { icon: 'fa-home', text: 'Dashboard', action: 'loadDashboardHome' },
+            { icon: 'fa-home', text: 'My Profile', action: 'loadDashboardHome' },
             { icon: 'fa-map-marked-alt', text: 'My Farms', action: 'loadFarmsPage' },
-            { icon: 'fa-seedling', text: 'Crops', action: 'loadCropsPage' },
             { icon: 'fa-cow', text: 'Livestock', action: 'loadLivestockPage' },
+            { icon: 'fa-seedling', text: 'Crops', action: 'loadCropsPage' },
             { icon: 'fa-heartbeat', text: 'Health Records', action: 'loadHealthRecordsPage' },
-            { icon: 'fa-baby', text: 'Pregnancies & Calves', action: 'loadPregnanciesPage' },
             { icon: 'fa-dollar-sign', text: 'Sales', action: 'loadSalesPage' },
             { icon: 'fa-boxes', text: 'Inventory', action: 'loadInventoryPage' },
-            { icon: 'fa-user-md', text: 'Vet Contacts', action: 'loadVetContactsPage' },
-            { icon: 'fa-book', text: 'Notebook', action: 'loadNotebookPage' },
+            { icon: 'fa-book', text: 'Farm Notebook', action: 'loadNotebookPage' },
             { icon: 'fa-store', text: 'Marketplace', action: 'loadMarketplacePage' }
         ],
         vet: [
-            { icon: 'fa-home', text: 'Dashboard', action: 'loadDashboardHome' },
-            { icon: 'fa-map-marked-alt', text: 'Associated Farms', action: 'loadFarmsPage' },
-            { icon: 'fa-cow', text: 'Livestock', action: 'loadLivestockPage' },
+            { icon: 'fa-home', text: 'My Profile', action: 'loadDashboardHome' },
+            { icon: 'fa-map-marked-alt', text: 'Farm Associations', action: 'loadFarmsPage' },
             { icon: 'fa-heartbeat', text: 'Health Records', action: 'loadHealthRecordsPage' },
-            { icon: 'fa-baby', text: 'Pregnancies', action: 'loadPregnanciesPage' },
-            { icon: 'fa-book', text: 'Notebook', action: 'loadNotebookPage' },
+            { icon: 'fa-cow', text: 'Livestock', action: 'loadLivestockPage' },
+            { icon: 'fa-book', text: 'Vet Notebook', action: 'loadNotebookPage' },
             { icon: 'fa-handshake', text: 'Farm Invitations', action: 'loadAssociationsPage' }
         ],
         agrovets: [
-            { icon: 'fa-home', text: 'Dashboard', action: 'loadDashboardHome' },
-            { icon: 'fa-store', text: 'My Listings', action: 'loadMyListingsPage' },
+            { icon: 'fa-home', text: 'My Profile', action: 'loadDashboardHome' },
+            { icon: 'fa-box', text: 'My Products', action: 'loadMyListingsPage' },
             { icon: 'fa-plus-circle', text: 'Add Product', action: 'showAddProductModal' },
-            { icon: 'fa-comments', text: 'Inquiries', action: 'loadInquiriesPage' },
-            { icon: 'fa-chart-line', text: 'Analytics', action: 'loadAnalyticsPage' }
+            { icon: 'fa-comments', text: 'Customer Inquiries', action: 'loadInquiriesPage' },
+            { icon: 'fa-chart-line', text: 'Business Analytics', action: 'loadAnalyticsPage' },
+            { icon: 'fa-store', text: 'Browse Marketplace', action: 'loadMarketplacePage' }
         ]
     };
 
