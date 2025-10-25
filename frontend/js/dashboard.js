@@ -153,6 +153,26 @@ async function loadFarmerProfile(container, user) {
                 </div>
             </div>
         </div>
+
+        <!-- Today's Reminders -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-bell"></i> Today's Tasks & Reminders
+                            <span class="badge bg-info ms-2">${getTodayReminders(user.id).length}</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showAddReminderModal('${user.role}')">
+                            <i class="fas fa-plus"></i> Add Task
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        ${renderRemindersList(user.id)}
+                    </div>
+                </div>
+            </div>
+        </div>
     `;
 }
 
@@ -280,6 +300,26 @@ async function loadVetProfile(container, user) {
                 </div>
             </div>
         ` : ''}
+
+        <!-- Today's Reminders -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-bell"></i> Today's Tasks & Reminders
+                            <span class="badge bg-info ms-2">${getTodayReminders(user.id).length}</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showAddReminderModal('${user.role}')">
+                            <i class="fas fa-plus"></i> Add Task
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        ${renderRemindersList(user.id)}
+                    </div>
+                </div>
+            </div>
+        </div>
     `;
 }
 
@@ -403,5 +443,333 @@ async function loadAgrovetsProfile(container, user) {
                 </div>
             </div>
         </div>
+
+        <!-- Today's Reminders -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-bell"></i> Today's Tasks & Reminders
+                            <span class="badge bg-info ms-2">${getTodayReminders(user.id).length}</span>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showAddReminderModal('${user.role}')">
+                            <i class="fas fa-plus"></i> Add Task
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        ${renderRemindersList(user.id)}
+                    </div>
+                </div>
+            </div>
+        </div>
     `;
+}
+
+// Reminder Management Functions
+
+// Get today's date in YYYY-MM-DD format
+function getTodayDate() {
+    return new Date().toISOString().split('T')[0];
+}
+
+// Get today's reminders for a user
+function getTodayReminders(userId) {
+    const reminders = JSON.parse(localStorage.getItem('agritrack_reminders') || '{}');
+    const today = getTodayDate();
+    const userReminders = reminders[userId] || [];
+    return userReminders.filter(reminder => reminder.date === today);
+}
+
+// Save reminder to localStorage
+function saveReminder(userId, reminder) {
+    const reminders = JSON.parse(localStorage.getItem('agritrack_reminders') || '{}');
+    if (!reminders[userId]) {
+        reminders[userId] = [];
+    }
+
+    reminders[userId].push({
+        id: Date.now() + Math.random(),
+        ...reminder,
+        completed: false,
+        createdAt: new Date().toISOString()
+    });
+
+    localStorage.setItem('agritrack_reminders', JSON.stringify(reminders));
+}
+
+// Delete reminder
+function deleteReminder(userId, reminderId) {
+    const reminders = JSON.parse(localStorage.getItem('agritrack_reminders') || '{}');
+    if (reminders[userId]) {
+        reminders[userId] = reminders[userId].filter(r => r.id !== reminderId);
+        localStorage.setItem('agritrack_reminders', JSON.stringify(reminders));
+        showToast('Task deleted', 'success');
+        loadDashboardHome();
+    }
+}
+
+// Toggle reminder completion
+function toggleReminder(userId, reminderId) {
+    const reminders = JSON.parse(localStorage.getItem('agritrack_reminders') || '{}');
+    if (reminders[userId]) {
+        const reminder = reminders[userId].find(r => r.id === reminderId);
+        if (reminder) {
+            reminder.completed = !reminder.completed;
+            localStorage.setItem('agritrack_reminders', JSON.stringify(reminders));
+            loadDashboardHome();
+        }
+    }
+}
+
+// Render reminders list
+function renderRemindersList(userId) {
+    const reminders = getTodayReminders(userId);
+
+    if (reminders.length === 0) {
+        return '<p class="text-muted">No tasks for today. <a href="#" onclick="showAddReminderModal()">Add your first task!</a></p>';
+    }
+
+    return `
+        <div class="list-group list-group-flush">
+            ${reminders.map(reminder => `
+                <div class="list-group-item d-flex justify-content-between align-items-start ${reminder.completed ? 'opacity-50' : ''}">
+                    <div class="d-flex align-items-start">
+                        <div class="form-check me-3 mt-1">
+                            <input class="form-check-input" type="checkbox"
+                                   ${reminder.completed ? 'checked' : ''}
+                                   onchange="toggleReminder('${userId}', ${reminder.id})">
+                        </div>
+                        <div>
+                            <h6 class="mb-1 ${reminder.completed ? 'text-decoration-line-through' : ''}">${reminder.title}</h6>
+                            ${reminder.description ? `<p class="text-muted small mb-1">${reminder.description}</p>` : ''}
+                            <div class="d-flex align-items-center gap-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock"></i> ${reminder.time}
+                                </small>
+                                <span class="badge bg-${getPriorityColor(reminder.priority)}">${reminder.priority}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editReminder('${userId}', ${reminder.id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteReminder('${userId}', ${reminder.id})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Get priority color for badge
+function getPriorityColor(priority) {
+    switch (priority.toLowerCase()) {
+        case 'high': return 'danger';
+        case 'medium': return 'warning';
+        case 'low': return 'success';
+        default: return 'secondary';
+    }
+}
+
+// Show add reminder modal
+function showAddReminderModal(role = 'farmer') {
+    const modal = createReminderModal(role);
+    document.body.insertAdjacentHTML('beforeend', modal);
+    const modalEl = document.getElementById('reminderModal');
+    const modalInstance = new bootstrap.Modal(modalEl);
+    modalInstance.show();
+
+    modalEl.addEventListener('hidden.bs.modal', () => {
+        modalEl.remove();
+    });
+
+    document.getElementById('reminderForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveNewReminder();
+        modalInstance.hide();
+    });
+}
+
+// Create reminder modal HTML
+function createReminderModal(role) {
+    const roleTasks = getRoleTaskSuggestions(role);
+
+    return `
+        <div class="modal fade" id="reminderModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-plus-circle text-success me-2"></i>
+                            Add New Task
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form id="reminderForm">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="taskTitle" class="form-label">Task Title</label>
+                                <input type="text" class="form-control" id="taskTitle" required>
+                                <div class="form-text">Brief description of the task</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="taskDescription" class="form-label">Description (Optional)</label>
+                                <textarea class="form-control" id="taskDescription" rows="2"></textarea>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="taskTime" class="form-label">Time</label>
+                                    <input type="time" class="form-control" id="taskTime" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="taskPriority" class="form-label">Priority</label>
+                                    <select class="form-select" id="taskPriority">
+                                        <option value="low">Low</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            ${roleTasks ? `
+                                <div class="mb-3">
+                                    <label class="form-label">Suggested Tasks</label>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        ${roleTasks.map(task => `
+                                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                                    onclick="document.getElementById('taskTitle').value='${task.title}'; ${task.description ? `document.getElementById('taskDescription').value='${task.description}';` : ''}">
+                                                ${task.title}
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i> Save Task
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Get role-specific task suggestions
+function getRoleTaskSuggestions(role) {
+    const suggestions = {
+        farmer: [
+            { title: 'Check livestock health', description: 'Monitor animals for any signs of illness' },
+            { title: 'Water crops', description: 'Ensure all crops are properly irrigated' },
+            { title: 'Record daily sales', description: 'Update sales records for the day' },
+            { title: 'Clean farm equipment', description: 'Maintenance of tools and machinery' },
+            { title: 'Check weather forecast', description: 'Plan activities based on weather conditions' }
+        ],
+        vet: [
+            { title: 'Farm visit appointment', description: 'Scheduled visit to check animal health' },
+            { title: 'Review health records', description: 'Update and review patient files' },
+            { title: 'Prepare medications', description: 'Organize medications for the day' },
+            { title: 'Follow up calls', description: 'Call farmers about treatment progress' },
+            { title: 'Equipment sterilization', description: 'Clean and sterilize medical equipment' }
+        ],
+        agrovets: [
+            { title: 'Restock inventory', description: 'Check and reorder low stock items' },
+            { title: 'Customer orders', description: 'Process and prepare customer orders' },
+            { title: 'Update product listings', description: 'Add new products to marketplace' },
+            { title: 'Customer inquiries', description: 'Respond to customer questions' },
+            { title: 'Delivery coordination', description: 'Arrange product deliveries' }
+        ]
+    };
+
+    return suggestions[role] || null;
+}
+
+// Save new reminder
+function saveNewReminder() {
+    const user = Auth.getCurrentUser();
+    if (!user) return;
+
+    const title = document.getElementById('taskTitle').value;
+    const description = document.getElementById('taskDescription').value;
+    const time = document.getElementById('taskTime').value;
+    const priority = document.getElementById('taskPriority').value;
+    const date = getTodayDate();
+
+    if (!title || !time) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+
+    saveReminder(user.id, {
+        title,
+        description,
+        time,
+        priority,
+        date
+    });
+
+    showToast('Task added successfully!', 'success');
+    loadDashboardHome();
+}
+
+// Edit reminder function
+function editReminder(userId, reminderId) {
+    const reminders = JSON.parse(localStorage.getItem('agritrack_reminders') || '{}');
+    const reminder = reminders[userId]?.find(r => r.id === reminderId);
+
+    if (reminder) {
+        // Show modal with existing data
+        showAddReminderModal();
+
+        // Wait for modal to be ready, then pre-fill
+        setTimeout(() => {
+            document.getElementById('taskTitle').value = reminder.title;
+            document.getElementById('taskDescription').value = reminder.description || '';
+            document.getElementById('taskTime').value = reminder.time;
+            document.getElementById('taskPriority').value = reminder.priority;
+
+            // Override the submit handler for editing
+            const form = document.getElementById('reminderForm');
+            form.onsubmit = (e) => {
+                e.preventDefault();
+                updateReminder(userId, reminderId);
+                bootstrap.Modal.getInstance(document.getElementById('reminderModal')).hide();
+            };
+        }, 100);
+    }
+}
+
+// Update reminder
+function updateReminder(userId, reminderId) {
+    const reminders = JSON.parse(localStorage.getItem('agritrack_reminders') || '{}');
+    const reminderIndex = reminders[userId]?.findIndex(r => r.id === reminderId);
+
+    if (reminderIndex !== -1) {
+        const title = document.getElementById('taskTitle').value;
+        const description = document.getElementById('taskDescription').value;
+        const time = document.getElementById('taskTime').value;
+        const priority = document.getElementById('taskPriority').value;
+
+        reminders[userId][reminderIndex] = {
+            ...reminders[userId][reminderIndex],
+            title,
+            description,
+            time,
+            priority,
+            updatedAt: new Date().toISOString()
+        };
+
+        localStorage.setItem('agritrack_reminders', JSON.stringify(reminders));
+        showToast('Task updated successfully!', 'success');
+        loadDashboardHome();
+    }
 }
