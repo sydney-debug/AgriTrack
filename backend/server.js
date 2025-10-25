@@ -35,15 +35,25 @@ const corsOptions = {
             'http://localhost:3000'
         ];
 
-        // Also allow environment variable override
+        // Handle environment variable (comma-separated)
         const envOrigin = process.env.CORS_ORIGIN;
-        if (envOrigin && envOrigin !== '*') {
-            allowedOrigins.push(envOrigin);
+        if (envOrigin) {
+            if (envOrigin === '*') {
+                return callback(null, true);
+            }
+            // Split comma-separated origins
+            const envOrigins = envOrigin.split(',').map(o => o.trim());
+            allowedOrigins.push(...envOrigins);
         }
 
-        if (allowedOrigins.indexOf(origin) !== -1 || envOrigin === '*') {
+        console.log('CORS Debug - Origin:', origin);
+        console.log('CORS Debug - Allowed Origins:', allowedOrigins);
+
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            console.log('CORS Debug - Origin allowed');
             callback(null, true);
         } else {
+            console.log('CORS Debug - Origin denied');
             callback(new Error('Not allowed by CORS'));
         }
     },
@@ -52,8 +62,9 @@ const corsOptions = {
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 };
 
-// Explicit OPTIONS handler for CORS preflight
-app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
+
+// Security middleware
 app.use(helmet());
 
 // Rate limiting
@@ -110,6 +121,8 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`AgriTrack API server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`CORS_ORIGIN: ${process.env.CORS_ORIGIN || 'Not set'}`);
+  console.log(`Allowed CORS origins: https://agri-track-virid.vercel.app, http://localhost:8080, http://localhost:3000${process.env.CORS_ORIGIN ? ', ' + process.env.CORS_ORIGIN : ''}`);
 });
 
 module.exports = app;
