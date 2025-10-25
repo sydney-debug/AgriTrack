@@ -30,17 +30,27 @@ router.post('/signup', async (req, res) => {
 
     const { email, password, role, full_name, phone } = req.body;
 
-    // Create auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Create auth user using admin client (bypasses email confirmation)
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password
+      password,
+      email_confirm: true, // Auto-confirm email
+      user_metadata: {
+        full_name: full_name,
+        role: role,
+        phone: phone || ''
+      }
     });
 
     if (authError) {
       return res.status(400).json({ error: authError.message });
     }
 
-    // Insert user data with role
+    if (!authData.user) {
+      return res.status(500).json({ error: 'Failed to create user' });
+    }
+
+    // Insert user data with role using admin client
     const { error: insertError } = await supabaseAdmin
       .from('users')
       .insert({
@@ -48,7 +58,9 @@ router.post('/signup', async (req, res) => {
         email,
         role,
         full_name,
-        phone
+        phone: phone || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
 
     if (insertError) {
@@ -62,7 +74,8 @@ router.post('/signup', async (req, res) => {
       user: {
         id: authData.user.id,
         email: authData.user.email,
-        role
+        role,
+        full_name
       }
     });
   } catch (error) {
