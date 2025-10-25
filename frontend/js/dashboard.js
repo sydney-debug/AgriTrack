@@ -1,26 +1,26 @@
-// Dashboard Module
+// Dashboard Module - Now shows User Profile
 
 async function loadDashboardHome() {
     setActiveMenuItem('loadDashboardHome');
-    updatePageTitle('Dashboard');
-    
+    updatePageTitle('My Profile');
+
     const user = Auth.getCurrentUser();
     const mainContent = document.getElementById('mainContent');
-    
+
     showLoading();
 
     try {
         if (user.role === 'farmer') {
-            await loadFarmerDashboard(mainContent);
+            await loadFarmerProfile(mainContent, user);
         } else if (user.role === 'vet') {
-            await loadVetDashboard(mainContent);
+            await loadVetProfile(mainContent, user);
         } else if (user.role === 'agrovets') {
-            await loadAgrovetsDashboard(mainContent);
+            await loadAgrovetsProfile(mainContent, user);
         }
     } catch (error) {
         mainContent.innerHTML = `
             <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle"></i> Error loading dashboard: ${error.message}
+                <i class="fas fa-exclamation-triangle"></i> Error loading profile: ${error.message}
             </div>
         `;
     } finally {
@@ -28,8 +28,9 @@ async function loadDashboardHome() {
     }
 }
 
-async function loadFarmerDashboard(container) {
-    // Fetch dashboard data
+// Farmer Profile
+async function loadFarmerProfile(container, user) {
+    // Fetch farmer's data
     const [farmsResult, livestockResult, cropsResult, salesResult] = await Promise.all([
         API.farms.getAll(),
         API.livestock.getAll(),
@@ -42,68 +43,86 @@ async function loadFarmerDashboard(container) {
     const crops = cropsResult.success ? cropsResult.data.crops : [];
     const sales = salesResult.success ? salesResult.data.sales : [];
 
-    // Calculate stats
+    // Calculate summary stats
     const totalRevenue = sales.reduce((sum, sale) => sum + parseFloat(sale.total_amount || 0), 0);
     const activeCrops = crops.filter(c => c.status === 'active').length;
     const healthyAnimals = livestock.filter(a => a.health_status === 'healthy').length;
 
     container.innerHTML = `
+        <!-- Profile Header -->
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-user-circle fa-5x text-success"></i>
+                </div>
+                <h3>${user.full_name}</h3>
+                <p class="text-muted">${user.email}</p>
+                <span class="badge bg-success fs-6">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span>
+                ${user.phone ? `<p class="text-muted mt-2"><i class="fas fa-phone"></i> ${user.phone}</p>` : ''}
+            </div>
+        </div>
+
+        <!-- Farm Summary Cards -->
         <div class="row mb-4">
             <div class="col-md-3">
-                <div class="stat-card bg-primary">
-                    <h3>${farms.length}</h3>
-                    <p><i class="fas fa-map-marked-alt"></i> Total Farms</p>
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-map-marked-alt fa-2x text-primary mb-2"></i>
+                        <h4>${farms.length}</h4>
+                        <p class="text-muted mb-0">Total Farms</p>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="stat-card bg-success">
-                    <h3>${livestock.length}</h3>
-                    <p><i class="fas fa-cow"></i> Total Livestock</p>
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-cow fa-2x text-success mb-2"></i>
+                        <h4>${livestock.length}</h4>
+                        <p class="text-muted mb-0">Livestock</p>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="stat-card bg-warning">
-                    <h3>${activeCrops}</h3>
-                    <p><i class="fas fa-seedling"></i> Active Crops</p>
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-seedling fa-2x text-warning mb-2"></i>
+                        <h4>${activeCrops}</h4>
+                        <p class="text-muted mb-0">Active Crops</p>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="stat-card bg-info">
-                    <h3>${formatCurrency(totalRevenue)}</h3>
-                    <p><i class="fas fa-dollar-sign"></i> Total Sales</p>
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-dollar-sign fa-2x text-info mb-2"></i>
+                        <h4>${formatCurrency(totalRevenue)}</h4>
+                        <p class="text-muted mb-0">Total Sales</p>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Recent Activity -->
         <div class="row">
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <i class="fas fa-chart-line"></i> Recent Sales
+                        <i class="fas fa-history"></i> Recent Sales
                     </div>
                     <div class="card-body">
                         ${sales.length > 0 ? `
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>Date</th>
-                                            <th>Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${sales.slice(0, 5).map(sale => `
-                                            <tr>
-                                                <td>${sale.product_name}</td>
-                                                <td>${formatDate(sale.sale_date)}</td>
-                                                <td>${formatCurrency(sale.total_amount)}</td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
+                            <div class="list-group list-group-flush">
+                                ${sales.slice(0, 3).map(sale => `
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>${sale.product_name}</strong>
+                                            <br><small class="text-muted">${formatDate(sale.sale_date)}</small>
+                                        </div>
+                                        <span class="badge bg-success">${formatCurrency(sale.total_amount)}</span>
+                                    </div>
+                                `).join('')}
                             </div>
-                        ` : '<p class="text-muted">No sales recorded yet.</p>'}
+                        ` : '<p class="text-muted">No recent sales</p>'}
                     </div>
                 </div>
             </div>
@@ -114,67 +133,22 @@ async function loadFarmerDashboard(container) {
                         <i class="fas fa-heartbeat"></i> Livestock Health Overview
                     </div>
                     <div class="card-body">
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Healthy</span>
-                                <span class="text-success">${healthyAnimals}</span>
+                        ${livestock.length > 0 ? `
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <h5 class="text-success">${healthyAnimals}</h5>
+                                    <p class="text-muted small">Healthy</p>
+                                </div>
+                                <div class="col-4">
+                                    <h5 class="text-warning">${livestock.filter(a => a.health_status === 'under_treatment').length}</h5>
+                                    <p class="text-muted small">Under Treatment</p>
+                                </div>
+                                <div class="col-4">
+                                    <h5 class="text-danger">${livestock.filter(a => a.health_status === 'sick').length}</h5>
+                                    <p class="text-muted small">Sick</p>
+                                </div>
                             </div>
-                            <div class="progress">
-                                <div class="progress-bar bg-success" style="width: ${livestock.length > 0 ? (healthyAnimals / livestock.length * 100) : 0}%"></div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Under Treatment</span>
-                                <span class="text-warning">${livestock.filter(a => a.health_status === 'under_treatment').length}</span>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar bg-warning" style="width: ${livestock.length > 0 ? (livestock.filter(a => a.health_status === 'under_treatment').length / livestock.length * 100) : 0}%"></div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span>Sick</span>
-                                <span class="text-danger">${livestock.filter(a => a.health_status === 'sick').length}</span>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar bg-danger" style="width: ${livestock.length > 0 ? (livestock.filter(a => a.health_status === 'sick').length / livestock.length * 100) : 0}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fas fa-tasks"></i> Quick Actions
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3 mb-3">
-                                <button class="btn btn-outline-success w-100" onclick="loadFarmsPage()">
-                                    <i class="fas fa-plus"></i><br>Add Farm
-                                </button>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <button class="btn btn-outline-success w-100" onclick="loadLivestockPage()">
-                                    <i class="fas fa-plus"></i><br>Add Livestock
-                                </button>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <button class="btn btn-outline-success w-100" onclick="loadSalesPage()">
-                                    <i class="fas fa-plus"></i><br>Record Sale
-                                </button>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <button class="btn btn-outline-success w-100" onclick="loadMarketplacePage()">
-                                    <i class="fas fa-store"></i><br>Browse Marketplace
-                                </button>
-                            </div>
-                        </div>
+                        ` : '<p class="text-muted">No livestock data</p>'}
                     </div>
                 </div>
             </div>
@@ -182,7 +156,8 @@ async function loadFarmerDashboard(container) {
     `;
 }
 
-async function loadVetDashboard(container) {
+// Veterinarian Profile
+async function loadVetProfile(container, user) {
     const [farmsResult, healthRecordsResult, associationsResult] = await Promise.all([
         API.farms.getAll(),
         API.healthRecords.getAll(),
@@ -197,46 +172,73 @@ async function loadVetDashboard(container) {
     const acceptedAssociations = associations.filter(a => a.invitation_status === 'accepted').length;
 
     container.innerHTML = `
+        <!-- Profile Header -->
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-user-md fa-5x text-primary"></i>
+                </div>
+                <h3>${user.full_name}</h3>
+                <p class="text-muted">${user.email}</p>
+                <span class="badge bg-primary fs-6">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span>
+                ${user.phone ? `<p class="text-muted mt-2"><i class="fas fa-phone"></i> ${user.phone}</p>` : ''}
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
         <div class="row mb-4">
             <div class="col-md-4">
-                <div class="stat-card bg-primary">
-                    <h3>${acceptedAssociations}</h3>
-                    <p><i class="fas fa-map-marked-alt"></i> Associated Farms</p>
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-map-marked-alt fa-2x text-primary mb-2"></i>
+                        <h4>${acceptedAssociations}</h4>
+                        <p class="text-muted mb-0">Associated Farms</p>
+                    </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="stat-card bg-success">
-                    <h3>${healthRecords.length}</h3>
-                    <p><i class="fas fa-heartbeat"></i> Health Records</p>
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-heartbeat fa-2x text-success mb-2"></i>
+                        <h4>${healthRecords.length}</h4>
+                        <p class="text-muted mb-0">Health Records</p>
+                    </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="stat-card bg-warning">
-                    <h3>${pendingInvitations}</h3>
-                    <p><i class="fas fa-envelope"></i> Pending Invitations</p>
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-envelope fa-2x text-warning mb-2"></i>
+                        <h4>${pendingInvitations}</h4>
+                        <p class="text-muted mb-0">Pending Invitations</p>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Farm Associations -->
         <div class="row">
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <i class="fas fa-map-marked-alt"></i> My Farms
+                        <i class="fas fa-map-marked-alt"></i> My Farm Associations
                     </div>
                     <div class="card-body">
                         ${farms.length > 0 ? `
-                            <ul class="list-group list-group-flush">
+                            <div class="list-group list-group-flush">
                                 ${farms.map(farm => `
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        ${farm.name}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>${farm.name}</strong>
+                                            <br><small class="text-muted">${farm.location}</small>
+                                        </div>
                                         <button class="btn btn-sm btn-outline-primary" onclick="viewFarm('${farm.id}')">
-                                            View
+                                            View Details
                                         </button>
-                                    </li>
+                                    </div>
                                 `).join('')}
-                            </ul>
-                        ` : '<p class="text-muted">No associated farms yet.</p>'}
+                            </div>
+                        ` : '<p class="text-muted">No associated farms yet. <a href="#" onclick="loadAssociationsPage(); return false;">Browse available farms</a></p>'}
                     </div>
                 </div>
             </div>
@@ -248,14 +250,19 @@ async function loadVetDashboard(container) {
                     </div>
                     <div class="card-body">
                         ${healthRecords.length > 0 ? `
-                            <ul class="list-group list-group-flush">
-                                ${healthRecords.slice(0, 5).map(record => `
-                                    <li class="list-group-item">
-                                        <strong>${record.record_type}</strong> - ${formatDate(record.record_date)}
-                                        <br><small class="text-muted">${record.livestock?.name || 'Animal'}</small>
-                                    </li>
+                            <div class="list-group list-group-flush">
+                                ${healthRecords.slice(0, 3).map(record => `
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <strong>${record.record_type}</strong>
+                                                <br><small class="text-muted">${record.livestock?.name || 'Animal'} - ${formatDate(record.record_date)}</small>
+                                            </div>
+                                            <span class="badge bg-${record.severity === 'high' ? 'danger' : record.severity === 'medium' ? 'warning' : 'success'}">${record.severity || 'normal'}</span>
+                                        </div>
+                                    </div>
                                 `).join('')}
-                            </ul>
+                            </div>
                         ` : '<p class="text-muted">No health records yet.</p>'}
                     </div>
                 </div>
@@ -266,9 +273,9 @@ async function loadVetDashboard(container) {
             <div class="row mt-4">
                 <div class="col-12">
                     <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i> 
-                        You have ${pendingInvitations} pending farm invitation(s). 
-                        <a href="#" onclick="loadAssociationsPage(); return false;">View invitations</a>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        You have ${pendingInvitations} pending farm invitation(s).
+                        <a href="#" onclick="loadAssociationsPage(); return false;" class="alert-link">View and respond to invitations</a>
                     </div>
                 </div>
             </div>
@@ -276,7 +283,8 @@ async function loadVetDashboard(container) {
     `;
 }
 
-async function loadAgrovetsDashboard(container) {
+// Agrovets Profile
+async function loadAgrovetsProfile(container, user) {
     const [listingsResult, inquiriesResult, analyticsResult] = await Promise.all([
         API.marketplace.getMyListings(),
         API.marketplace.getInquiries(),
@@ -291,38 +299,65 @@ async function loadAgrovetsDashboard(container) {
     const openInquiries = inquiries.filter(i => i.status === 'open').length;
 
     container.innerHTML = `
+        <!-- Profile Header -->
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-store fa-5x text-success"></i>
+                </div>
+                <h3>${user.full_name}</h3>
+                <p class="text-muted">${user.email}</p>
+                <span class="badge bg-success fs-6">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</span>
+                ${user.phone ? `<p class="text-muted mt-2"><i class="fas fa-phone"></i> ${user.phone}</p>` : ''}
+            </div>
+        </div>
+
+        <!-- Business Stats -->
         <div class="row mb-4">
             <div class="col-md-3">
-                <div class="stat-card bg-primary">
-                    <h3>${analytics.total_listings || 0}</h3>
-                    <p><i class="fas fa-box"></i> Total Listings</p>
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-box fa-2x text-primary mb-2"></i>
+                        <h4>${analytics.total_listings || 0}</h4>
+                        <p class="text-muted mb-0">Total Products</p>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="stat-card bg-success">
-                    <h3>${activeListings}</h3>
-                    <p><i class="fas fa-check-circle"></i> Active Listings</p>
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <h4>${activeListings}</h4>
+                        <p class="text-muted mb-0">Active Listings</p>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="stat-card bg-warning">
-                    <h3>${openInquiries}</h3>
-                    <p><i class="fas fa-envelope"></i> Open Inquiries</p>
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-envelope fa-2x text-warning mb-2"></i>
+                        <h4>${openInquiries}</h4>
+                        <p class="text-muted mb-0">Open Inquiries</p>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="stat-card bg-info">
-                    <h3>${analytics.total_views || 0}</h3>
-                    <p><i class="fas fa-eye"></i> Total Views</p>
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-eye fa-2x text-info mb-2"></i>
+                        <h4>${analytics.total_views || 0}</h4>
+                        <p class="text-muted mb-0">Profile Views</p>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Recent Activity -->
         <div class="row">
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <i class="fas fa-chart-bar"></i> Listings by Category
+                        <i class="fas fa-chart-bar"></i> Product Categories
                     </div>
                     <div class="card-body">
                         ${analytics.by_category && Object.keys(analytics.by_category).length > 0 ? `
@@ -330,14 +365,14 @@ async function loadAgrovetsDashboard(container) {
                                 <div class="mb-3">
                                     <div class="d-flex justify-content-between mb-1">
                                         <span class="text-capitalize">${category}</span>
-                                        <span>${data.count} (${data.views} views)</span>
+                                        <span>${data.count} products (${data.views} views)</span>
                                     </div>
-                                    <div class="progress">
-                                        <div class="progress-bar bg-success" style="width: ${(data.count / analytics.total_listings * 100)}%"></div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" style="width: ${analytics.total_listings > 0 ? (data.count / analytics.total_listings * 100) : 0}%"></div>
                                     </div>
                                 </div>
                             `).join('')}
-                        ` : '<p class="text-muted">No listings yet.</p>'}
+                        ` : '<p class="text-muted">No products listed yet. <a href="#" onclick="showAddProductModal(); return false;">Add your first product</a></p>'}
                     </div>
                 </div>
             </div>
@@ -345,49 +380,25 @@ async function loadAgrovetsDashboard(container) {
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <i class="fas fa-comments"></i> Recent Inquiries
+                        <i class="fas fa-comments"></i> Recent Customer Inquiries
                     </div>
                     <div class="card-body">
                         ${inquiries.length > 0 ? `
-                            <ul class="list-group list-group-flush">
-                                ${inquiries.slice(0, 5).map(inquiry => `
-                                    <li class="list-group-item">
-                                        <strong>${inquiry.marketplace_listings?.product_name || 'Product'}</strong>
-                                        <br><small class="text-muted">From: ${inquiry.users?.full_name || 'Customer'}</small>
-                                        <br><span class="badge bg-${inquiry.status === 'open' ? 'warning' : 'success'}">${inquiry.status}</span>
-                                    </li>
+                            <div class="list-group list-group-flush">
+                                ${inquiries.slice(0, 3).map(inquiry => `
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <strong>${inquiry.marketplace_listings?.product_name || 'Product'}</strong>
+                                                <br><small class="text-muted">From: ${inquiry.users?.full_name || 'Customer'}</small>
+                                                <br><small class="text-muted">${formatDate(inquiry.created_at)}</small>
+                                            </div>
+                                            <span class="badge bg-${inquiry.status === 'open' ? 'warning' : inquiry.status === 'responded' ? 'info' : 'success'}">${inquiry.status}</span>
+                                        </div>
+                                    </div>
                                 `).join('')}
-                            </ul>
+                            </div>
                         ` : '<p class="text-muted">No inquiries yet.</p>'}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fas fa-tasks"></i> Quick Actions
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <button class="btn btn-outline-success w-100" onclick="showAddProductModal()">
-                                    <i class="fas fa-plus"></i><br>Add New Product
-                                </button>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <button class="btn btn-outline-primary w-100" onclick="loadMyListingsPage()">
-                                    <i class="fas fa-list"></i><br>Manage Listings
-                                </button>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <button class="btn btn-outline-info w-100" onclick="loadInquiriesPage()">
-                                    <i class="fas fa-envelope"></i><br>View Inquiries
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
