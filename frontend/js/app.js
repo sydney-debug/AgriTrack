@@ -36,10 +36,10 @@ function hideAllPages() {
 function showToast(message, type = 'info') {
     const toastEl = document.getElementById('notificationToast');
     const toastBody = document.getElementById('toastMessage');
-    
+
     toastBody.textContent = message;
     toastEl.className = 'toast';
-    
+
     if (type === 'success') {
         toastEl.classList.add('bg-success', 'text-white');
     } else if (type === 'error') {
@@ -47,9 +47,20 @@ function showToast(message, type = 'info') {
     } else if (type === 'warning') {
         toastEl.classList.add('bg-warning');
     }
-    
-    const toast = new bootstrap.Toast(toastEl);
-    toast.show();
+
+    // Use Bootstrap Toast API if available, otherwise manual show
+    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    } else {
+        // Manual implementation
+        toastEl.style.display = 'block';
+        toastEl.classList.add('show');
+        setTimeout(() => {
+            toastEl.classList.remove('show');
+            toastEl.style.display = 'none';
+        }, 5000);
+    }
 }
 
 // Loading spinner
@@ -226,7 +237,6 @@ function debounce(func, wait) {
     };
 }
 
-// Confirm delete
-function confirmDelete(message = 'Are you sure you want to delete this item?') {
-    return confirm(message);
+function showLandingPage() {
+    showLanding();
 }
