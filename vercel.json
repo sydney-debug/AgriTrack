@@ -1,6 +1,9 @@
 {
   "version": 2,
   "name": "agritrack",
+  "buildCommand": null,
+  "outputDirectory": "frontend",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "public": true
 }
