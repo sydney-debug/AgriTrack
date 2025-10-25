@@ -127,6 +127,7 @@ function buildSidebarMenu(role) {
     const menuItems = {
         farmer: [
             { icon: 'fa-home', text: 'My Profile', action: 'loadDashboardHome' },
+            { icon: 'fa-bell', text: 'My Tasks', action: 'loadTasksPage' },
             { icon: 'fa-map-marked-alt', text: 'My Farms', action: 'loadFarmsPage' },
             { icon: 'fa-cow', text: 'Livestock', action: 'loadLivestockPage' },
             { icon: 'fa-seedling', text: 'Crops', action: 'loadCropsPage' },
@@ -138,6 +139,7 @@ function buildSidebarMenu(role) {
         ],
         vet: [
             { icon: 'fa-home', text: 'My Profile', action: 'loadDashboardHome' },
+            { icon: 'fa-bell', text: 'My Tasks', action: 'loadTasksPage' },
             { icon: 'fa-map-marked-alt', text: 'Farm Associations', action: 'loadFarmsPage' },
             { icon: 'fa-heartbeat', text: 'Health Records', action: 'loadHealthRecordsPage' },
             { icon: 'fa-cow', text: 'Livestock', action: 'loadLivestockPage' },
@@ -146,6 +148,7 @@ function buildSidebarMenu(role) {
         ],
         agrovets: [
             { icon: 'fa-home', text: 'My Profile', action: 'loadDashboardHome' },
+            { icon: 'fa-bell', text: 'My Tasks', action: 'loadTasksPage' },
             { icon: 'fa-box', text: 'My Products', action: 'loadMyListingsPage' },
             { icon: 'fa-plus-circle', text: 'Add Product', action: 'showAddProductModal' },
             { icon: 'fa-comments', text: 'Customer Inquiries', action: 'loadInquiriesPage' },

@@ -721,6 +721,167 @@ function saveNewReminder() {
     loadDashboardHome();
 }
 
+// Tasks Page Function
+function loadTasksPage() {
+    setActiveMenuItem('loadTasksPage');
+    updatePageTitle('My Tasks');
+
+    const user = Auth.getCurrentUser();
+    const mainContent = document.getElementById('mainContent');
+
+    showLoading();
+
+    try {
+        const allReminders = getAllReminders(user.id);
+        const todayReminders = getTodayReminders(user.id);
+
+        mainContent.innerHTML = `
+            <!-- Tasks Header -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-tasks fa-4x text-primary"></i>
+                    </div>
+                    <h3>Task Management</h3>
+                    <p class="text-muted">Organize your daily activities and track progress</p>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card dashboard-card text-center h-100">
+                        <div class="card-body">
+                            <i class="fas fa-calendar-day fa-2x text-info mb-2"></i>
+                            <h4>${todayReminders.length}</h4>
+                            <p class="text-muted mb-0">Today's Tasks</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card dashboard-card text-center h-100">
+                        <div class="card-body">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <h4>${todayReminders.filter(r => r.completed).length}</h4>
+                            <p class="text-muted mb-0">Completed Today</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card dashboard-card text-center h-100">
+                        <div class="card-body">
+                            <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                            <h4>${todayReminders.filter(r => !r.completed).length}</h4>
+                            <p class="text-muted mb-0">Pending Today</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card dashboard-card text-center h-100">
+                        <div class="card-body">
+                            <i class="fas fa-list fa-2x text-secondary mb-2"></i>
+                            <h4>${allReminders.length}</h4>
+                            <p class="text-muted mb-0">Total Tasks</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Today's Tasks -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-calendar-day"></i> Today's Tasks
+                        <span class="badge bg-info ms-2">${todayReminders.length}</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="showAddReminderModal('${user.role}')">
+                        <i class="fas fa-plus"></i> Add Task
+                    </button>
+                </div>
+                <div class="card-body">
+                    ${todayReminders.length > 0 ? renderAllRemindersList(user.id, 'today') : '<p class="text-muted">No tasks for today. <a href="#" onclick="showAddReminderModal()">Add your first task!</a></p>'}
+                </div>
+            </div>
+
+            <!-- All Tasks -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-list"></i> All Tasks
+                    <span class="badge bg-secondary ms-2">${allReminders.length}</span>
+                </div>
+                <div class="card-body">
+                    ${allReminders.length > 0 ? renderAllRemindersList(user.id, 'all') : '<p class="text-muted">No tasks yet. Start by adding some daily tasks!</p>'}
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        mainContent.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> Error loading tasks: ${error.message}
+            </div>
+        `;
+    } finally {
+        hideLoading();
+    }
+}
+
+// Render all reminders list (for tasks page)
+function renderAllRemindersList(userId, filter = 'all') {
+    let reminders = getAllReminders(userId);
+
+    if (filter === 'today') {
+        reminders = getTodayReminders(userId);
+    }
+
+    if (reminders.length === 0) {
+        return '<p class="text-muted">No tasks found.</p>';
+    }
+
+    // Sort by completion status and time
+    reminders.sort((a, b) => {
+        if (a.completed !== b.completed) {
+            return a.completed ? 1 : -1; // Completed tasks at bottom
+        }
+        return a.time.localeCompare(b.time); // Then by time
+    });
+
+    return `
+        <div class="list-group list-group-flush">
+            ${reminders.map(reminder => `
+                <div class="list-group-item d-flex justify-content-between align-items-start ${reminder.completed ? 'opacity-50' : ''}">
+                    <div class="d-flex align-items-start">
+                        <div class="form-check me-3 mt-1">
+                            <input class="form-check-input" type="checkbox"
+                                   ${reminder.completed ? 'checked' : ''}
+                                   onchange="toggleReminder('${userId}', ${reminder.id})">
+                        </div>
+                        <div>
+                            <h6 class="mb-1 ${reminder.completed ? 'text-decoration-line-through' : ''}">${reminder.title}</h6>
+                            ${reminder.description ? `<p class="text-muted small mb-1">${reminder.description}</p>` : ''}
+                            <div class="d-flex align-items-center gap-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar"></i> ${new Date(reminder.date).toLocaleDateString()}
+                                    <i class="fas fa-clock ms-2"></i> ${reminder.time}
+                                </small>
+                                <span class="badge bg-${getPriorityColor(reminder.priority)}">${reminder.priority}</span>
+                                ${reminder.completed ? '<span class="badge bg-success">Completed</span>' : '<span class="badge bg-warning">Pending</span>'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editReminder('${userId}', ${reminder.id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteReminder('${userId}', ${reminder.id})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
 // Edit reminder function
 function editReminder(userId, reminderId) {
     const reminders = JSON.parse(localStorage.getItem('agritrack_reminders') || '{}');
