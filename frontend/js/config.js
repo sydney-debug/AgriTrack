@@ -2,7 +2,7 @@
 
 const CONFIG = {
     // API Backend URL
-    API_URL: 'https://agritrack-api.fly.dev/api',
+    API_URL: 'https://agritrack-api.onrender.com/api',
     
     // Supabase Configuration (Replace with your actual values)
     SUPABASE_URL: 'https://txgkmhjumamvcavvsolp.supabase.co',
