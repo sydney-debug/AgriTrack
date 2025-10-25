@@ -2,11 +2,11 @@
 
 const CONFIG = {
     // API Backend URL
-    API_URL: 'http://localhost:3000/api',
+    API_URL: 'https://agritrack-api.fly.dev/api',
     
     // Supabase Configuration (Replace with your actual values)
-    SUPABASE_URL: 'YOUR_SUPABASE_PROJECT_URL',
-    SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY',
+    SUPABASE_URL: 'https://txgkmhjumamvcavvsolp.supabase.co',
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4Z2ttaGp1bWFtdmNhdnZzb2xwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzNzg3ODMsImV4cCI6MjA3Njk1NDc4M30.8AkJbTeDOIXQMT34KsqFnKBlpgHd-G24-MQzYKWGHy0',
     
     // Local Storage Keys
     STORAGE_KEYS: {
@@ -16,7 +16,4 @@ const CONFIG = {
 };
 
 // Initialize Supabase client
-let supabaseClient;
-if (typeof supabase !== 'undefined') {
-    supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-}
+const supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
