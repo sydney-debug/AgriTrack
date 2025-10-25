@@ -30,6 +30,13 @@ function hideAllPages() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('signupPage').style.display = 'none';
     document.getElementById('dashboardPage').style.display = 'none';
+    document.getElementById('profilePage').style.display = 'none';
+}
+
+function showProfile() {
+    hideAllPages();
+    document.getElementById('profilePage').style.display = 'block';
+    document.getElementById('mainNav').style.display = 'block';
 }
 
 // Toast notification
@@ -126,7 +133,7 @@ function buildSidebarMenu(role) {
 
     const menuItems = {
         farmer: [
-            { icon: 'fa-home', text: 'My Profile', action: 'loadDashboardHome' },
+            { icon: 'fa-user', text: 'Profile', action: 'loadProfilePage' },
             { icon: 'fa-bell', text: 'My Tasks', action: 'loadTasksPage' },
             { icon: 'fa-map-marked-alt', text: 'My Farms', action: 'loadFarmsPage' },
             { icon: 'fa-cow', text: 'Livestock', action: 'loadLivestockPage' },
@@ -138,7 +145,7 @@ function buildSidebarMenu(role) {
             { icon: 'fa-store', text: 'Marketplace', action: 'loadMarketplacePage' }
         ],
         vet: [
-            { icon: 'fa-home', text: 'My Profile', action: 'loadDashboardHome' },
+            { icon: 'fa-user', text: 'Profile', action: 'loadProfilePage' },
             { icon: 'fa-bell', text: 'My Tasks', action: 'loadTasksPage' },
             { icon: 'fa-map-marked-alt', text: 'Farm Associations', action: 'loadFarmsPage' },
             { icon: 'fa-heartbeat', text: 'Health Records', action: 'loadHealthRecordsPage' },
@@ -147,7 +154,7 @@ function buildSidebarMenu(role) {
             { icon: 'fa-handshake', text: 'Farm Invitations', action: 'loadAssociationsPage' }
         ],
         agrovets: [
-            { icon: 'fa-home', text: 'My Profile', action: 'loadDashboardHome' },
+            { icon: 'fa-user', text: 'Profile', action: 'loadProfilePage' },
             { icon: 'fa-bell', text: 'My Tasks', action: 'loadTasksPage' },
             { icon: 'fa-box', text: 'My Products', action: 'loadMyListingsPage' },
             { icon: 'fa-plus-circle', text: 'Add Product', action: 'showAddProductModal' },

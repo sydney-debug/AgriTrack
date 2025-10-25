@@ -179,3 +179,22 @@ document.getElementById('logoutBtn')?.addEventListener('click', () => {
         Auth.logout();
     }
 });
+
+// Landing page login form handler
+document.getElementById('landingLoginForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('landingLoginEmail').value;
+    const password = document.getElementById('landingLoginPassword').value;
+
+    showLoading();
+    const result = await Auth.login(email, password);
+    hideLoading();
+
+    if (result.success) {
+        showToast('Login successful!', 'success');
+        // Page will automatically redirect via auth state change
+    } else {
+        showToast(result.error, 'error');
+    }
+});
