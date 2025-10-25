@@ -8,12 +8,40 @@ Your AgriTrack profiles now include a comprehensive **Daily Tasks & Reminders** 
 
 ## 🎯 **What's New**
 
-### **📅 Daily Task Management**
-- **Add Tasks**: Create tasks with specific times and dates
-- **Priority Levels**: High, Medium, Low priority settings
-- **Task Completion**: Check off completed tasks
-- **Edit & Delete**: Modify or remove tasks as needed
-- **Role-Specific Suggestions**: Smart task suggestions based on user role
+### **📋 Dedicated Tasks Page**
+- **Full Task Management**: Complete overview of all tasks
+- **Quick Stats Dashboard**: Today's tasks, completed, pending, total counts
+- **Dual View**: Today's tasks + All tasks sections
+- **Enhanced Sorting**: Tasks organized by completion status and time
+- **Date Information**: Shows when each task was created
+
+### **🗂️ Navigation Integration**
+- **Sidebar Access**: "My Tasks" menu item for all roles
+- **Quick Access**: Easy navigation between profile and tasks
+- **Consistent UI**: Same design language across all pages
+
+---
+
+## 🚀 **How to Use**
+
+### **📱 From Profile Page**
+1. **Login** to your profile
+2. **Scroll down** to "Today's Tasks & Reminders" section
+3. **Click "Add Task"** to create new tasks
+4. **Manage tasks** directly from the profile
+
+### **📋 From Tasks Page**
+1. **Click "My Tasks"** in the sidebar menu
+2. **View comprehensive** task overview
+3. **Add tasks** using the dedicated interface
+4. **Track progress** with detailed statistics
+
+### **✅ Task Management**
+- **Check completion** with checkboxes
+- **Edit tasks** with inline editing
+- **Delete tasks** with confirmation
+- **Priority management** with color coding
+- **Time-based sorting** for better organization
 
 ### **⏰ Time & Date Integration**
 - **Specific Times**: Set exact times for each task (e.g., 9:00 AM, 2:30 PM)
@@ -78,36 +106,39 @@ Your AgriTrack profiles now include a comprehensive **Daily Tasks & Reminders** 
 
 ## 🔧 **Technical Implementation**
 
-### **📁 Files Modified**
+### **Files Modified**
 - **`dashboard.js`**: Added reminder management functions
+- **`app.js`**: Added "My Tasks" to sidebar navigation
 - **Profile pages**: All three profiles now include reminder sections
 
-### **💾 Data Storage**
+### **Data Storage**
 - **localStorage**: Tasks stored in browser storage
 - **User-specific**: Each user has their own tasks
 - **Date-based**: Tasks organized by date
 - **JSON format**: Structured data with metadata
 
-### **⚡ Functions Added**
+### **Functions Added**
 ```javascript
 getTodayReminders(userId)        // Get today's tasks
 saveReminder(userId, reminder)   // Save new task
 toggleReminder(userId, id)       // Mark complete/incomplete
 deleteReminder(userId, id)       // Delete task
-renderRemindersList(userId)      // Display tasks
-showAddReminderModal(role)       // Show add task modal
+renderRemindersList(userId)      // Display tasks in profile
+loadTasksPage()                  // Show dedicated tasks page
+renderAllRemindersList(userId)   // Display tasks in tasks page
 ```
 
-### **🎯 Role Integration**
-- **Dynamic suggestions** based on user role
-- **Role-specific UI** elements
-- **Contextual task ideas** for each profession
+### **Navigation Integration**
+- **Profile Integration**: Tasks section on each profile page
+- **Dedicated Page**: Full tasks management via sidebar
+- **Seamless Navigation**: Easy switching between views
+- **Consistent Experience**: Same functionality across all access points
 
 ---
 
-## 📱 **User Experience**
+## **User Experience**
 
-### **🔄 Workflow**
+### **Workflow**
 1. **Login** → Profile loads with existing tasks
 2. **View tasks** → See what's scheduled for today
 3. **Add tasks** → Plan daily activities
