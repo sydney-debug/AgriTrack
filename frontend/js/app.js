@@ -106,7 +106,7 @@ function formatCurrency(amount) {
 
 // Initialize dashboard based on user role
 async function initializeDashboard() {
-    const user = Auth.getCurrentUser();
+    const user = await Auth.getCurrentUser();
 
     if (!user) {
         showLanding();

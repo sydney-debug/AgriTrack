@@ -56,6 +56,34 @@ A comprehensive web-based farm management system built with Node.js, Express, Su
 - PostgreSQL (via Supabase)
 - Row Level Security (RLS) for data protection
 
+## 🔑 **Supabase Setup**
+
+### **⚠️ IMPORTANT: Update API Key**
+
+The current Supabase API key has expired. To fix the authentication errors:
+
+1. **Go to Supabase Dashboard**: https://supabase.com/dashboard/project/txgkmhjumamvcavvsolp/settings/api
+2. **Copy the fresh API key** from the "Project API keys" section
+3. **Update the configuration** in `frontend/js/config.js`:
+   ```javascript
+   SUPABASE_ANON_KEY: 'YOUR_FRESH_API_KEY_HERE'
+   ```
+
+### **Database Setup**
+
+1. **Run the database schema** in your Supabase SQL Editor:
+   ```bash
+   # Copy and paste the contents of database/schema.sql
+   ```
+
+2. **Verify RLS policies** are enabled for all tables
+
+### **Authentication Setup**
+
+1. **Enable email authentication** in Supabase Auth settings
+2. **Configure email templates** for signup verification
+3. **Test the connection** by trying to login
+
 ## Setup Instructions
 
 ### Prerequisites

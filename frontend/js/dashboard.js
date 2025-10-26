@@ -4,7 +4,7 @@ async function loadDashboardHome() {
     setActiveMenuItem('loadDashboardHome');
     updatePageTitle('Business Dashboard');
 
-    const user = Auth.getCurrentUser();
+    const user = await Auth.getCurrentUser();
     if (!user) {
         showLanding();
         return;
@@ -873,7 +873,7 @@ async function loadProfilePage() {
     setActiveMenuItem('loadProfilePage');
     updatePageTitle('My Profile');
 
-    const user = Auth.getCurrentUser();
+    const user = await Auth.getCurrentUser();
     if (!user) {
         showLanding();
         return;

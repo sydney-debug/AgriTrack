@@ -62,29 +62,48 @@ const Auth = {
 
     // Check if user is authenticated
     isAuthenticated() {
-        return !!supabase.auth.getSession();
+        try {
+            return !!supabase.auth.getSession();
+        } catch (error) {
+            console.error('Auth check error:', error);
+            return false;
+        }
     },
 
-    // Get current user
-    getCurrentUser() {
-        const { data: { session } } = supabase.auth.getSession();
-        return session?.user || null;
-    },
-
-    // Get user profile from database
-    async getUserProfile(userId) {
-        const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', userId)
-            .single();
-
-        if (error) {
-            console.error('Error fetching user profile:', error);
+    // Get current user with error handling
+    async getCurrentUser() {
+        try {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (error) {
+                console.error('Get session error:', error);
+                return null;
+            }
+            return session?.user || null;
+        } catch (error) {
+            console.error('Get current user error:', error);
             return null;
         }
+    },
 
-        return data;
+    // Get user profile from database with error handling
+    async getUserProfile(userId) {
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', userId)
+                .single();
+
+            if (error) {
+                console.error('Error fetching user profile:', error);
+                return null;
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Get user profile error:', error);
+            return null;
+        }
     },
 
     // Login with email and password
@@ -96,12 +115,24 @@ const Auth = {
             });
 
             if (error) {
-                throw error;
+                console.error('Login error:', error);
+                if (error.message.includes('Invalid API key')) {
+                    showErrorModal();
+                    return { success: false, error: 'Configuration error. Please refresh the page.' };
+                }
+                return {
+                    success: false,
+                    error: error.message || 'Login failed'
+                };
             }
 
             return { success: true, user: data.user };
         } catch (error) {
             console.error('Login error:', error);
+            if (error.message.includes('Invalid API key')) {
+                showErrorModal();
+                return { success: false, error: 'Configuration error. Please refresh the page.' };
+            }
             return {
                 success: false,
                 error: error.message || 'Login failed'
@@ -125,7 +156,15 @@ const Auth = {
             });
 
             if (error) {
-                throw error;
+                console.error('Signup error:', error);
+                if (error.message.includes('Invalid API key')) {
+                    showErrorModal();
+                    return { success: false, error: 'Configuration error. Please refresh the page.' };
+                }
+                return {
+                    success: false,
+                    error: error.message || 'Signup failed'
+                };
             }
 
             return {
@@ -134,6 +173,10 @@ const Auth = {
             };
         } catch (error) {
             console.error('Signup error:', error);
+            if (error.message.includes('Invalid API key')) {
+                showErrorModal();
+                return { success: false, error: 'Configuration error. Please refresh the page.' };
+            }
             return {
                 success: false,
                 error: error.message || 'Signup failed'
@@ -167,18 +210,79 @@ const Auth = {
 };
 
 // Initialize authentication on page load
-document.addEventListener('DOMContentLoaded', () => {
-    Auth.init();
+document.addEventListener('DOMContentLoaded', async () => {
+    await Auth.init();
 
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Check current session with proper error handling
+    try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+            console.error('Session check error:', error);
+            if (error.message.includes('Invalid API key')) {
+                showErrorModal();
+                return;
+            }
+            showLanding();
+            return;
+        }
+
         if (session) {
-            Auth.handleSignIn(session);
+            await Auth.handleSignIn(session);
         } else {
             showLanding();
         }
-    });
+    } catch (error) {
+        console.error('Initialization error:', error);
+        if (error.message.includes('Invalid API key')) {
+            showErrorModal();
+        } else {
+            showLanding();
+        }
+    }
 });
+
+// Show error modal for API key issues
+function showErrorModal() {
+    const modalHtml = `
+        <div class="modal fade" id="errorModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger">
+                            <i class="fas fa-exclamation-triangle"></i> Configuration Error
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Supabase API key has expired or is invalid.</strong></p>
+                        <p>To fix this issue:</p>
+                        <ol>
+                            <li>Go to <a href="https://supabase.com/dashboard/project/txgkmhjumamvcavvsolp/settings/api" target="_blank">Supabase Dashboard</a></li>
+                            <li>Copy the fresh API key from "Project API keys" section</li>
+                            <li>Update <code>frontend/js/config.js</code> with the new key</li>
+                            <li>Refresh the page</li>
+                        </ol>
+                        <div class="alert alert-warning">
+                            <strong>Note:</strong> This is a demo project. In production, API keys should be managed securely as environment variables.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+    modal.show();
+
+    modal._element.addEventListener('hidden.bs.modal', () => {
+        modal._element.remove();
+    });
+}
 
 // Handle login form
 document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
