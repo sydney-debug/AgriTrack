@@ -2,27 +2,185 @@
 
 // Show/hide page functions
 function showLanding() {
-    hideAllPages();
-    document.getElementById('landingPage').style.display = 'flex';
-    document.getElementById('mainNav').style.display = 'none';
+    // Enhanced hiding of all other elements
+    const loginPage = document.getElementById('loginPage');
+    const signupPage = document.getElementById('signupPage');
+    const dashboardPage = document.getElementById('dashboardPage');
+    const profilePage = document.getElementById('profilePage');
+
+    if (loginPage) {
+        loginPage.style.display = 'none';
+        loginPage.style.visibility = 'hidden';
+    }
+
+    if (signupPage) {
+        signupPage.style.display = 'none';
+        signupPage.style.visibility = 'hidden';
+    }
+
+    if (dashboardPage) {
+        dashboardPage.style.display = 'none';
+        dashboardPage.style.visibility = 'hidden';
+    }
+
+    if (profilePage) {
+        profilePage.style.display = 'none';
+        profilePage.style.visibility = 'hidden';
+    }
+
+    // Show landing page and ensure login cards are visible
+    const landingPage = document.getElementById('landingPage');
+    const mainNav = document.getElementById('mainNav');
+
+    if (landingPage) {
+        landingPage.style.display = 'flex';
+        landingPage.style.visibility = 'visible';
+        // Ensure login cards within landing page are visible
+        const loginCards = landingPage.querySelectorAll('.card');
+        loginCards.forEach(card => {
+            card.style.display = 'block';
+        });
+    }
+
+    if (mainNav) {
+        mainNav.style.display = 'none';
+        mainNav.style.visibility = 'hidden';
+    }
 }
 
 function showLogin() {
-    hideAllPages();
-    document.getElementById('loginPage').style.display = 'block';
-    document.getElementById('mainNav').style.display = 'none';
+    // Enhanced hiding of all other elements
+    const landingPage = document.getElementById('landingPage');
+    const signupPage = document.getElementById('signupPage');
+    const dashboardPage = document.getElementById('dashboardPage');
+    const profilePage = document.getElementById('profilePage');
+
+    if (landingPage) {
+        landingPage.style.display = 'none';
+        landingPage.style.visibility = 'hidden';
+        // Hide any login cards within landing page
+        const loginCards = landingPage.querySelectorAll('.card');
+        loginCards.forEach(card => {
+            card.style.display = 'none';
+        });
+    }
+
+    if (signupPage) {
+        signupPage.style.display = 'none';
+        signupPage.style.visibility = 'hidden';
+    }
+
+    if (dashboardPage) {
+        dashboardPage.style.display = 'none';
+        dashboardPage.style.visibility = 'hidden';
+    }
+
+    if (profilePage) {
+        profilePage.style.display = 'none';
+        profilePage.style.visibility = 'hidden';
+    }
+
+    // Show login page and hide navigation
+    const loginPage = document.getElementById('loginPage');
+    const mainNav = document.getElementById('mainNav');
+
+    if (loginPage) {
+        loginPage.style.display = 'block';
+        loginPage.style.visibility = 'visible';
+    }
+
+    if (mainNav) {
+        mainNav.style.display = 'none';
+        mainNav.style.visibility = 'hidden';
+    }
 }
 
 function showSignup() {
-    hideAllPages();
-    document.getElementById('signupPage').style.display = 'block';
-    document.getElementById('mainNav').style.display = 'none';
+    // Enhanced hiding of all other elements
+    const landingPage = document.getElementById('landingPage');
+    const loginPage = document.getElementById('loginPage');
+    const dashboardPage = document.getElementById('dashboardPage');
+    const profilePage = document.getElementById('profilePage');
+
+    if (landingPage) {
+        landingPage.style.display = 'none';
+        landingPage.style.visibility = 'hidden';
+        // Hide any login cards within landing page
+        const loginCards = landingPage.querySelectorAll('.card');
+        loginCards.forEach(card => {
+            card.style.display = 'none';
+        });
+    }
+
+    if (loginPage) {
+        loginPage.style.display = 'none';
+        loginPage.style.visibility = 'hidden';
+    }
+
+    if (dashboardPage) {
+        dashboardPage.style.display = 'none';
+        dashboardPage.style.visibility = 'hidden';
+    }
+
+    if (profilePage) {
+        profilePage.style.display = 'none';
+        profilePage.style.visibility = 'hidden';
+    }
+
+    // Show signup page and hide navigation
+    const signupPage = document.getElementById('signupPage');
+    const mainNav = document.getElementById('mainNav');
+
+    if (signupPage) {
+        signupPage.style.display = 'block';
+        signupPage.style.visibility = 'visible';
+    }
+
+    if (mainNav) {
+        mainNav.style.display = 'none';
+        mainNav.style.visibility = 'hidden';
+    }
 }
 
 function showDashboard() {
-    hideAllPages();
-    document.getElementById('dashboardPage').style.display = 'block';
-    document.getElementById('mainNav').style.display = 'block';
+    // Enhanced hiding of all login elements
+    const loginPage = document.getElementById('loginPage');
+    const landingPage = document.getElementById('landingPage');
+    const signupPage = document.getElementById('signupPage');
+
+    if (loginPage) {
+        loginPage.style.display = 'none';
+        loginPage.style.visibility = 'hidden';
+    }
+
+    if (landingPage) {
+        landingPage.style.display = 'none';
+        landingPage.style.visibility = 'hidden';
+        // Also hide any login cards within landing page
+        const loginCards = landingPage.querySelectorAll('.card');
+        loginCards.forEach(card => {
+            card.style.display = 'none';
+        });
+    }
+
+    if (signupPage) {
+        signupPage.style.display = 'none';
+        signupPage.style.visibility = 'hidden';
+    }
+
+    // Show dashboard and navigation
+    const dashboardPage = document.getElementById('dashboardPage');
+    const mainNav = document.getElementById('mainNav');
+
+    if (dashboardPage) {
+        dashboardPage.style.display = 'block';
+        dashboardPage.style.visibility = 'visible';
+    }
+
+    if (mainNav) {
+        mainNav.style.display = 'block';
+        mainNav.style.visibility = 'visible';
+    }
 }
 
 function hideAllPages() {

@@ -354,6 +354,31 @@ body {
     border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: var(--dark-green);
+/* Login form visibility control */
+#loginPage.hidden,
+#signupPage.hidden,
+#landingPage.hidden,
+.card.login-hidden {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+#landingPage .card.login-hidden {
+    display: none !important;
+}
+
+/* Ensure dashboard is always visible when authenticated */
+#dashboardPage.authenticated {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Enhanced page transitions */
+.page-transition {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.page-transition.show {
+    opacity: 1;
 }

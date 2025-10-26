@@ -41,13 +41,46 @@ const Auth = {
             await this.createUserProfile(user, role);
         }
 
-        // Immediately hide login form and show dashboard (same as login forms)
-        hideAllPages();
-        document.getElementById('dashboardPage').style.display = 'block';
-        document.getElementById('mainNav').style.display = 'block';
+        // Enhanced hiding of login elements (same as login forms)
+        const loginPage = document.getElementById('loginPage');
+        const landingPage = document.getElementById('landingPage');
+
+        if (loginPage) {
+            loginPage.style.display = 'none';
+            loginPage.style.visibility = 'hidden';
+        }
+
+        if (landingPage) {
+            landingPage.style.display = 'none';
+            landingPage.style.visibility = 'hidden';
+            // Also hide any login cards within landing page
+            const loginCards = landingPage.querySelectorAll('.card');
+            loginCards.forEach(card => {
+                card.style.display = 'none';
+            });
+        }
+
+        // Show dashboard explicitly
+        const dashboardPage = document.getElementById('dashboardPage');
+        const mainNav = document.getElementById('mainNav');
+
+        if (dashboardPage) {
+            dashboardPage.style.display = 'block';
+            dashboardPage.style.visibility = 'visible';
+        }
+
+        if (mainNav) {
+            mainNav.style.display = 'block';
+            mainNav.style.visibility = 'visible';
+        }
 
         // Update navigation with user info
-        document.getElementById('userNameNav').textContent = profile?.full_name || user.email;
+        if (mainNav) {
+            const userNameNav = document.getElementById('userNameNav');
+            if (userNameNav) {
+                userNameNav.textContent = profile?.full_name || user.email;
+            }
+        }
 
         // Load dashboard content
         setTimeout(() => {
@@ -58,8 +91,51 @@ const Auth = {
     // Handle sign out
     handleSignOut() {
         console.log('User signed out, redirecting to landing page');
-        showLanding();
-        document.getElementById('mainNav').style.display = 'none';
+
+        // Enhanced sign out: properly show landing page with login cards
+        const loginPage = document.getElementById('loginPage');
+        const signupPage = document.getElementById('signupPage');
+        const dashboardPage = document.getElementById('dashboardPage');
+        const profilePage = document.getElementById('profilePage');
+        const landingPage = document.getElementById('landingPage');
+        const mainNav = document.getElementById('mainNav');
+
+        // Hide all other pages
+        if (loginPage) {
+            loginPage.style.display = 'none';
+            loginPage.style.visibility = 'hidden';
+        }
+
+        if (signupPage) {
+            signupPage.style.display = 'none';
+            signupPage.style.visibility = 'hidden';
+        }
+
+        if (dashboardPage) {
+            dashboardPage.style.display = 'none';
+            dashboardPage.style.visibility = 'hidden';
+        }
+
+        if (profilePage) {
+            profilePage.style.display = 'none';
+            profilePage.style.visibility = 'hidden';
+        }
+
+        if (mainNav) {
+            mainNav.style.display = 'none';
+            mainNav.style.visibility = 'hidden';
+        }
+
+        // Show landing page with login cards
+        if (landingPage) {
+            landingPage.style.display = 'flex';
+            landingPage.style.visibility = 'visible';
+            // Ensure login cards within landing page are visible
+            const loginCards = landingPage.querySelectorAll('.card');
+            loginCards.forEach(card => {
+                card.style.display = 'block';
+            });
+        }
     },
 
     // Create user profile in our database
@@ -194,14 +270,58 @@ const Auth = {
                 console.error('Logout error:', error);
             }
 
-            // Immediately show landing page after logout
-            showLanding();
+            // Enhanced logout: properly show landing page with login cards
+            const loginPage = document.getElementById('loginPage');
+            const signupPage = document.getElementById('signupPage');
+            const dashboardPage = document.getElementById('dashboardPage');
+            const profilePage = document.getElementById('profilePage');
+            const landingPage = document.getElementById('landingPage');
+            const mainNav = document.getElementById('mainNav');
+
+            // Hide all other pages
+            if (loginPage) {
+                loginPage.style.display = 'none';
+                loginPage.style.visibility = 'hidden';
+            }
+
+            if (signupPage) {
+                signupPage.style.display = 'none';
+                signupPage.style.visibility = 'hidden';
+            }
+
+            if (dashboardPage) {
+                dashboardPage.style.display = 'none';
+                dashboardPage.style.visibility = 'hidden';
+            }
+
+            if (profilePage) {
+                profilePage.style.display = 'none';
+                profilePage.style.visibility = 'hidden';
+            }
+
+            if (mainNav) {
+                mainNav.style.display = 'none';
+                mainNav.style.visibility = 'hidden';
+            }
+
+            // Show landing page with login cards
+            if (landingPage) {
+                landingPage.style.display = 'flex';
+                landingPage.style.visibility = 'visible';
+                // Ensure login cards within landing page are visible
+                const loginCards = landingPage.querySelectorAll('.card');
+                loginCards.forEach(card => {
+                    card.style.display = 'block';
+                });
+            }
+
+            console.log('User logged out and redirected to landing page');
         } catch (error) {
             console.error('Logout error:', error);
-            // Still show landing page even if there's an error
+            // Still try to show landing page even if there's an error
             showLanding();
         }
-    }
+    },
 };
 
 // Initialize authentication on page load
@@ -286,10 +406,38 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
     if (result.success) {
         showToast('Login successful!', 'success');
 
-        // Immediately hide login form and show dashboard
-        hideAllPages();
-        document.getElementById('dashboardPage').style.display = 'block';
-        document.getElementById('mainNav').style.display = 'block';
+        // More explicit hiding of login elements
+        const loginPage = document.getElementById('loginPage');
+        const landingPage = document.getElementById('landingPage');
+
+        if (loginPage) {
+            loginPage.style.display = 'none';
+            loginPage.style.visibility = 'hidden';
+        }
+
+        if (landingPage) {
+            landingPage.style.display = 'none';
+            landingPage.style.visibility = 'hidden';
+            // Also hide any login cards within landing page
+            const loginCards = landingPage.querySelectorAll('.card');
+            loginCards.forEach(card => {
+                card.style.display = 'none';
+            });
+        }
+
+        // Show dashboard explicitly
+        const dashboardPage = document.getElementById('dashboardPage');
+        const mainNav = document.getElementById('mainNav');
+
+        if (dashboardPage) {
+            dashboardPage.style.display = 'block';
+            dashboardPage.style.visibility = 'visible';
+        }
+
+        if (mainNav) {
+            mainNav.style.display = 'block';
+            mainNav.style.visibility = 'visible';
+        }
 
         // Load dashboard content
         setTimeout(() => {
@@ -340,10 +488,38 @@ document.getElementById('landingLoginForm')?.addEventListener('submit', async (e
     if (result.success) {
         showToast('Login successful!', 'success');
 
-        // Immediately hide landing page and show dashboard
-        hideAllPages();
-        document.getElementById('dashboardPage').style.display = 'block';
-        document.getElementById('mainNav').style.display = 'block';
+        // More explicit hiding of login elements (same as login form)
+        const loginPage = document.getElementById('loginPage');
+        const landingPage = document.getElementById('landingPage');
+
+        if (loginPage) {
+            loginPage.style.display = 'none';
+            loginPage.style.visibility = 'hidden';
+        }
+
+        if (landingPage) {
+            landingPage.style.display = 'none';
+            landingPage.style.visibility = 'hidden';
+            // Also hide any login cards within landing page
+            const loginCards = landingPage.querySelectorAll('.card');
+            loginCards.forEach(card => {
+                card.style.display = 'none';
+            });
+        }
+
+        // Show dashboard explicitly
+        const dashboardPage = document.getElementById('dashboardPage');
+        const mainNav = document.getElementById('mainNav');
+
+        if (dashboardPage) {
+            dashboardPage.style.display = 'block';
+            dashboardPage.style.visibility = 'visible';
+        }
+
+        if (mainNav) {
+            mainNav.style.display = 'block';
+            mainNav.style.visibility = 'visible';
+        }
 
         // Load dashboard content
         setTimeout(() => {
