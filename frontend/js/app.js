@@ -107,17 +107,25 @@ function formatCurrency(amount) {
 // Initialize dashboard based on user role
 async function initializeDashboard() {
     const user = Auth.getCurrentUser();
-    
+
     if (!user) {
         showLanding();
         return;
     }
 
+    // Get user profile with role
+    const profile = await Auth.getUserProfile(user.id);
+    if (!profile) {
+        showToast('Error loading user profile', 'error');
+        Auth.logout();
+        return;
+    }
+
     // Update navigation
-    document.getElementById('userNameNav').textContent = user.full_name || user.email;
+    document.getElementById('userNameNav').textContent = profile.full_name || user.email;
 
     // Build sidebar menu based on role
-    buildSidebarMenu(user.role);
+    buildSidebarMenu(profile.role);
 
     // Show dashboard
     showDashboard();
