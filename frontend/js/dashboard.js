@@ -146,21 +146,23 @@ function toggleReminder(userId, reminderId) {
 }
 
 async function loadDashboardHome() {
-    console.log('Loading dashboard home');
+    console.log('🚀 Loading dashboard home');
     setActiveMenuItem('loadDashboardHome');
     updatePageTitle('Business Dashboard');
 
     const user = await Auth.getCurrentUser();
     if (!user) {
-        console.log('No user found, showing landing page');
+        console.log('❌ No user found, showing landing page');
         showLanding();
         return;
     }
 
-    console.log('User found, showing dashboard');
+    console.log('✅ User found, showing dashboard');
     const mainContent = document.getElementById('mainContent');
     const dashboardPage = document.getElementById('dashboardPage');
     const body = document.body;
+
+    console.log('📋 Dashboard elements found:', { mainContent: !!mainContent, dashboardPage: !!dashboardPage });
 
     // Add authenticated classes for CSS targeting
     if (dashboardPage) {
@@ -169,23 +171,28 @@ async function loadDashboardHome() {
     body.classList.add('dashboard-active');
 
     showLoading();
+    console.log('⏳ Loading spinner shown');
 
     try {
         // Get user profile with role
+        console.log('🔍 Getting user profile for:', user.id);
         const profile = await Auth.getUserProfile(user.id);
+
         if (!profile) {
-            console.log('No profile found, showing fallback dashboard');
+            console.log('❌ No profile found, showing fallback dashboard');
             showToast('Error loading user profile', 'error');
             // Show fallback dashboard even if profile fails
-            showFallbackDashboard(mainContent, user);
+            showFallbackDashboard(mainContent, user, null);
             return;
         }
 
-        console.log('Profile loaded, loading role-specific dashboard for:', profile.role);
+        console.log('✅ Profile loaded, role:', profile.role);
 
         // Load sidebar menu based on role
+        console.log('📋 Loading sidebar menu');
         await loadSidebarMenu(profile.role);
 
+        console.log('📊 Loading role-specific dashboard');
         if (profile.role === 'farmer') {
             await loadFarmerDashboard(mainContent, profile);
         } else if (profile.role === 'vet') {
@@ -193,24 +200,43 @@ async function loadDashboardHome() {
         } else if (profile.role === 'agrovets') {
             await loadAgrovetsDashboard(mainContent, profile);
         }
+
+        console.log('✅ Dashboard loaded successfully');
     } catch (error) {
-        console.error('Error loading dashboard:', error);
+        console.error('❌ Error loading dashboard:', error);
         showToast('Error loading dashboard, showing basic view', 'warning');
-        // Show fallback dashboard on any error
-        showFallbackDashboard(mainContent, user);
+
+        // Try to get profile data even in error case
+        try {
+            const fallbackProfile = await Auth.getUserProfile(user.id);
+            // Show fallback dashboard with profile data if available
+            showFallbackDashboard(mainContent, user, fallbackProfile);
+        } catch (profileError) {
+            console.error('❌ Error getting profile for fallback:', profileError);
+            // Show fallback dashboard without profile data
+            showFallbackDashboard(mainContent, user);
+        }
     } finally {
         // Ensure loading spinner is always hidden
-        console.log('Dashboard loaded, hiding loading spinner');
+        console.log('🛑 Dashboard loaded, hiding loading spinner');
         hideLoading();
     }
 }
 
 // Fallback dashboard when API calls fail
-function showFallbackDashboard(container, user) {
+function showFallbackDashboard(container, user, profile = null) {
     console.log('Loading fallback dashboard');
 
-    // Load default sidebar menu (farmer role as default)
-    loadSidebarMenu('farmer');
+    // Use provided profile or create fallback profile data
+    const profileData = profile || {
+        id: user.id,
+        email: user.email,
+        role: user.user_metadata?.role || 'farmer',
+        full_name: user.user_metadata?.full_name || user.email.split('@')[0]
+    };
+
+    // Load sidebar menu based on role
+    loadSidebarMenu(profileData.role);
 
     container.innerHTML = `
         <!-- Welcome Header -->
@@ -219,8 +245,8 @@ function showFallbackDashboard(container, user) {
                 <div class="mb-2">
                     <i class="fas fa-seedling fa-2x text-success"></i>
                 </div>
-                <h5 class="mb-1">Welcome back!</h5>
-                <p class="text-muted small mb-0">Your AgriTrack dashboard is ready</p>
+                <h5 class="mb-1">Welcome back, ${profileData.full_name}!</h5>
+                <p class="text-muted small mb-0">Here's your farm overview for today</p>
             </div>
         </div>
 
@@ -331,8 +357,8 @@ async function loadFarmerDashboard(container, profile) {
     } catch (error) {
         console.error('Error loading farmer dashboard:', error);
         showToast('Error loading dashboard data, showing basic view', 'warning');
-        // Show basic dashboard without API data
-        renderFarmerDashboard(container, profile, [], [], [], [], 0, 0, 0);
+        // Show fallback dashboard instead of basic farmer dashboard
+        showFallbackDashboard(container, user, profile);
     }
 }
 
@@ -497,7 +523,8 @@ async function loadVetDashboard(container, profile) {
     } catch (error) {
         console.error('Error loading vet dashboard:', error);
         showToast('Error loading dashboard data, showing basic view', 'warning');
-        renderVetDashboard(container, profile, [], [], [], 0, 0);
+        // Show fallback dashboard instead of specific vet dashboard
+        showFallbackDashboard(container, user, profile);
     }
 }
 
@@ -649,7 +676,8 @@ async function loadAgrovetsDashboard(container, profile) {
     } catch (error) {
         console.error('Error loading agrovets dashboard:', error);
         showToast('Error loading dashboard data, showing basic view', 'warning');
-        renderAgrovetsDashboard(container, profile, [], [], {}, 0, 0);
+        // Show fallback dashboard instead of specific agrovets dashboard
+        showFallbackDashboard(container, user, profile);
     }
 }
 

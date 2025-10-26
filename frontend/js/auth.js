@@ -31,6 +31,20 @@ const Auth = {
         console.log('Handling sign in for user:', user.email);
 
         try {
+            console.log('🔍 Checking user profile for:', user.id);
+
+            // First, let's test if we can access the users table at all
+            try {
+                const { data: testData, error: testError } = await window.supabase
+                    .from('users')
+                    .select('*')
+                    .limit(1);
+
+                console.log('📊 Users table test query:', { testData, testError });
+            } catch (testErr) {
+                console.error('❌ Users table test failed:', testErr);
+            }
+
             // Check if user profile exists in our users table
             const { data: profile, error } = await window.supabase
                 .from('users')
@@ -38,11 +52,48 @@ const Auth = {
                 .eq('id', user.id)
                 .single();
 
+            console.log('📊 Profile query result:', { profile, error });
+
             if (error && error.code === 'PGRST116') {
-                console.log('User profile not found, creating profile');
+                console.log('❌ User profile not found, creating profile');
                 // User doesn't exist in our table, create profile
                 const role = user.user_metadata?.role || 'farmer';
-                await this.createUserProfile(user, role);
+                console.log('👤 Creating profile with role:', role);
+
+                const createResult = await this.createUserProfile(user, role);
+                console.log('✅ Profile creation result:', createResult);
+
+                // Try to get the profile again after creation
+                const { data: newProfile, error: newError } = await window.supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                console.log('📊 New profile query result:', { newProfile, newError });
+
+                if (newProfile) {
+                    profile = newProfile;
+                    console.log('✅ Using newly created profile');
+                } else {
+                    console.warn('⚠️ Profile creation failed, proceeding without profile');
+                }
+            } else if (error) {
+                console.error('❌ Error fetching profile:', error);
+                showToast('Error loading user profile', 'warning');
+            }
+
+            console.log('🔄 Final profile data:', profile);
+
+            // If we still don't have a profile, create a fallback one
+            if (!profile) {
+                console.log('🛡️ Using fallback profile data');
+                profile = {
+                    id: user.id,
+                    email: user.email,
+                    role: user.user_metadata?.role || 'farmer',
+                    full_name: user.user_metadata?.full_name || user.email.split('@')[0]
+                };
             }
 
             console.log('Hiding login elements and showing dashboard');
@@ -87,13 +138,17 @@ const Auth = {
             if (mainNav) {
                 const userNameNav = document.getElementById('userNameNav');
                 if (userNameNav) {
-                    userNameNav.textContent = profile?.full_name || user.email;
+                    // Use the profile data or fallback to user email
+                    const displayName = (profile && profile.full_name) ? profile.full_name : user.email.split('@')[0];
+                    userNameNav.textContent = displayName;
+                    console.log('Navigation updated with user:', displayName);
                 }
             }
 
             console.log('Dashboard elements shown, loading dashboard content');
             // Load dashboard content
             setTimeout(() => {
+                console.log('Calling loadDashboardHome()');
                 loadDashboardHome();
             }, 100);
         } catch (error) {
@@ -162,17 +217,30 @@ const Auth = {
 
     // Create user profile in our database
     async createUserProfile(user, role) {
-        const { error } = await window.supabase
-            .from('users')
-            .insert({
-                id: user.id,
-                email: user.email,
-                role: role,
-                full_name: user.user_metadata?.full_name || user.email.split('@')[0]
-            });
+        try {
+            console.log('🔄 Creating user profile:', { id: user.id, email: user.email, role: role });
 
-        if (error) {
-            console.error('Error creating user profile:', error);
+            const { data, error } = await window.supabase
+                .from('users')
+                .insert({
+                    id: user.id,
+                    email: user.email,
+                    role: role,
+                    full_name: user.user_metadata?.full_name || user.email.split('@')[0]
+                });
+
+            console.log('📊 Profile creation result:', { data, error });
+
+            if (error) {
+                console.error('❌ Error creating user profile:', error);
+                return { success: false, error };
+            }
+
+            console.log('✅ User profile created successfully');
+            return { success: true, data };
+        } catch (error) {
+            console.error('❌ Exception in createUserProfile:', error);
+            return { success: false, error };
         }
     },
 
@@ -204,20 +272,35 @@ const Auth = {
     // Get user profile from database with error handling
     async getUserProfile(userId) {
         try {
+            console.log('🔍 Querying users table for ID:', userId);
             const { data, error } = await window.supabase
                 .from('users')
                 .select('*')
                 .eq('id', userId)
                 .single();
 
+            console.log('📊 Users table query result:', { data, error });
+
             if (error) {
-                console.error('Error fetching user profile:', error);
+                console.error('❌ Error fetching user profile:', error);
                 return null;
             }
 
+            console.log('✅ User profile retrieved:', data);
             return data;
         } catch (error) {
-            console.error('Get user profile error:', error);
+            console.error('❌ Get user profile error:', error);
+            // If there's a database connection error, return a fallback profile
+            const user = await this.getCurrentUser();
+            if (user) {
+                console.log('🛡️ Returning fallback profile due to database error');
+                return {
+                    id: user.id,
+                    email: user.email,
+                    role: user.user_metadata?.role || 'farmer',
+                    full_name: user.user_metadata?.full_name || user.email.split('@')[0]
+                };
+            }
             return null;
         }
     },
