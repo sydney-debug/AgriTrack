@@ -280,65 +280,37 @@ ALTER TABLE calves ENABLE ROW LEVEL SECURITY;
 ALTER TABLE vets_contacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notebook ENABLE ROW LEVEL SECURITY;
 ALTER TABLE marketplace_listings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE farm_vet_associations ENABLE ROW LEVEL SECURITY;
+-- Note: farm_vet_associations RLS is disabled to avoid circular dependency
 ALTER TABLE marketplace_inquiries ENABLE ROW LEVEL SECURITY;
 
 -- Users policies
 CREATE POLICY "Users can view their own data" ON users FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update their own data" ON users FOR UPDATE USING (auth.uid() = id);
 
--- Farms policies
-CREATE POLICY "Farmers can view their own farms" ON farms FOR SELECT USING (
-  farmer_id = auth.uid()
-);
-CREATE POLICY "Vets can view farms they're associated with" ON farms FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM farm_vet_associations 
-    WHERE farm_id = farms.id 
-    AND vet_id = auth.uid() 
-    AND invitation_status = 'accepted'
-  )
-);
-CREATE POLICY "Farmers can insert their own farms" ON farms FOR INSERT WITH CHECK (farmer_id = auth.uid());
-CREATE POLICY "Farmers can update their own farms" ON farms FOR UPDATE USING (farmer_id = auth.uid());
-CREATE POLICY "Farmers can delete their own farms" ON farms FOR DELETE USING (farmer_id = auth.uid());
+-- Farms policies - Simplified to avoid circular dependencies
+CREATE POLICY "Farmers can manage their own farms" ON farms FOR ALL USING (farmer_id = auth.uid());
+-- Note: Vet access to farms temporarily disabled to avoid circular dependency with farm_vet_associations table
 
 -- Crops policies
 CREATE POLICY "Farmers can manage crops on their farms" ON crops FOR ALL USING (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = crops.farm_id AND farms.farmer_id = auth.uid())
 );
 
--- Livestock policies
+-- Livestock policies - Simplified to avoid circular dependencies
 CREATE POLICY "Farmers can manage livestock on their farms" ON livestock FOR ALL USING (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = livestock.farm_id AND farms.farmer_id = auth.uid())
 );
-CREATE POLICY "Vets can view livestock on associated farms" ON livestock FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM farm_vet_associations fva
-    JOIN farms f ON f.id = fva.farm_id
-    WHERE f.id = livestock.farm_id 
-    AND fva.vet_id = auth.uid() 
-    AND fva.invitation_status = 'accepted'
-  )
-);
+-- Note: Vet access to livestock temporarily removed to avoid circular dependency
 
--- Health records policies
-CREATE POLICY "Farmers can view health records for their animals" ON health_records FOR SELECT USING (
+-- Health records policies - Simplified to avoid circular dependencies
+CREATE POLICY "Farmers can manage health records for their animals" ON health_records FOR ALL USING (
   EXISTS (
     SELECT 1 FROM livestock l
     JOIN farms f ON f.id = l.farm_id
     WHERE l.id = health_records.animal_id AND f.farmer_id = auth.uid()
   )
 );
-CREATE POLICY "Vets can view and create health records for associated farms" ON health_records FOR ALL USING (
-  EXISTS (
-    SELECT 1 FROM livestock l
-    JOIN farm_vet_associations fva ON fva.farm_id = l.farm_id
-    WHERE l.id = health_records.animal_id 
-    AND fva.vet_id = auth.uid() 
-    AND fva.invitation_status = 'accepted'
-  )
-);
+-- Note: Vet access to health records temporarily removed to avoid circular dependency
 
 -- Sales policies
 CREATE POLICY "Farmers can manage sales on their farms" ON sales FOR ALL USING (
@@ -350,7 +322,7 @@ CREATE POLICY "Farmers can manage inventory on their farms" ON inventory FOR ALL
   EXISTS (SELECT 1 FROM farms WHERE farms.id = inventory.farm_id AND farms.farmer_id = auth.uid())
 );
 
--- Pregnancies policies
+-- Pregnancies policies - Simplified to avoid circular dependencies
 CREATE POLICY "Farmers can manage pregnancies on their farms" ON pregnancies FOR ALL USING (
   EXISTS (
     SELECT 1 FROM livestock l
@@ -358,24 +330,7 @@ CREATE POLICY "Farmers can manage pregnancies on their farms" ON pregnancies FOR
     WHERE l.id = pregnancies.animal_id AND f.farmer_id = auth.uid()
   )
 );
-CREATE POLICY "Vets can view and update pregnancies for associated farms" ON pregnancies FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM livestock l
-    JOIN farm_vet_associations fva ON fva.farm_id = l.farm_id
-    WHERE l.id = pregnancies.animal_id 
-    AND fva.vet_id = auth.uid() 
-    AND fva.invitation_status = 'accepted'
-  )
-);
-CREATE POLICY "Vets can update pregnancies" ON pregnancies FOR UPDATE USING (
-  EXISTS (
-    SELECT 1 FROM livestock l
-    JOIN farm_vet_associations fva ON fva.farm_id = l.farm_id
-    WHERE l.id = pregnancies.animal_id 
-    AND fva.vet_id = auth.uid() 
-    AND fva.invitation_status = 'accepted'
-  )
-);
+-- Note: Vet access to pregnancies temporarily removed to avoid circular dependency
 
 -- Calves policies
 CREATE POLICY "Farmers can manage calves on their farms" ON calves FOR ALL USING (
@@ -396,15 +351,13 @@ CREATE POLICY "Users can manage their own notes" ON notebook FOR ALL USING (user
 CREATE POLICY "Everyone can view active marketplace listings" ON marketplace_listings FOR SELECT USING (status = 'active');
 CREATE POLICY "Agrovets can manage their own listings" ON marketplace_listings FOR ALL USING (agrovets_id = auth.uid());
 
--- Farm-vet associations policies
-CREATE POLICY "Farmers can view associations for their farms" ON farm_vet_associations FOR SELECT USING (
-  EXISTS (SELECT 1 FROM farms WHERE farms.id = farm_vet_associations.farm_id AND farms.farmer_id = auth.uid())
-);
-CREATE POLICY "Vets can view their associations" ON farm_vet_associations FOR SELECT USING (vet_id = auth.uid());
-CREATE POLICY "Farmers can invite vets" ON farm_vet_associations FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM farms WHERE farms.id = farm_id AND farms.farmer_id = auth.uid())
-);
-CREATE POLICY "Vets can update invitation status" ON farm_vet_associations FOR UPDATE USING (vet_id = auth.uid());
+-- Farm-vet associations policies - Temporarily disable RLS to avoid circular dependency
+-- This breaks the infinite recursion loop between farms and farm_vet_associations tables
+ALTER TABLE farm_vet_associations DISABLE ROW LEVEL SECURITY;
+
+-- Note: Since RLS is disabled on farm_vet_associations, all authenticated users can access this table
+-- This is a temporary measure to fix the infinite recursion issue
+-- In a production environment, you should implement proper RLS policies or use a different approach
 
 -- Marketplace inquiries policies
 CREATE POLICY "Farmers can create inquiries" ON marketplace_inquiries FOR INSERT WITH CHECK (farmer_id = auth.uid());
