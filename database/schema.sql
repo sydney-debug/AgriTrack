@@ -1,5 +1,11 @@
 -- AgriTrack Database Schema for Supabase PostgreSQL
 -- Run this script in your Supabase SQL Editor
+--
+-- ✅ SAFE TO RUN MULTIPLE TIMES: This script handles existing objects gracefully
+-- - Indexes: Dropped and recreated if they exist
+-- - Triggers: Dropped and recreated if they exist
+-- - Functions: Use CREATE OR REPLACE
+-- - Tables: Use CREATE TABLE IF NOT EXISTS
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -247,6 +253,25 @@ CREATE TABLE IF NOT EXISTS marketplace_inquiries (
 -- ============================================
 -- INDEXES FOR PERFORMANCE
 -- ============================================
+
+-- Drop existing indexes if they exist to avoid conflicts when re-running schema
+DROP INDEX IF EXISTS idx_farms_farmer_id;
+DROP INDEX IF EXISTS idx_crops_farm_id;
+DROP INDEX IF EXISTS idx_livestock_farm_id;
+DROP INDEX IF EXISTS idx_health_records_animal_id;
+DROP INDEX IF EXISTS idx_health_records_vet_id;
+DROP INDEX IF EXISTS idx_sales_farm_id;
+DROP INDEX IF EXISTS idx_inventory_farm_id;
+DROP INDEX IF EXISTS idx_pregnancies_animal_id;
+DROP INDEX IF EXISTS idx_calves_mother_id;
+DROP INDEX IF EXISTS idx_vets_contacts_farmer_id;
+DROP INDEX IF EXISTS idx_notebook_user_id;
+DROP INDEX IF EXISTS idx_marketplace_listings_agrovets_id;
+DROP INDEX IF EXISTS idx_farm_vet_associations_farm_id;
+DROP INDEX IF EXISTS idx_farm_vet_associations_vet_id;
+DROP INDEX IF EXISTS idx_marketplace_inquiries_listing_id;
+
+-- Create indexes for performance
 CREATE INDEX idx_farms_farmer_id ON farms(farmer_id);
 CREATE INDEX idx_crops_farm_id ON crops(farm_id);
 CREATE INDEX idx_livestock_farm_id ON livestock(farm_id);
@@ -284,25 +309,35 @@ ALTER TABLE marketplace_listings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE marketplace_inquiries ENABLE ROW LEVEL SECURITY;
 
 -- Users policies
+DROP POLICY IF EXISTS "Users can view their own data" ON users;
+DROP POLICY IF EXISTS "Users can update their own data" ON users;
 CREATE POLICY "Users can view their own data" ON users FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update their own data" ON users FOR UPDATE USING (auth.uid() = id);
 
 -- Farms policies - Simplified to avoid circular dependencies
+DROP POLICY IF EXISTS "Farmers can manage their own farms" ON farms;
+DROP POLICY IF EXISTS "Users can view farms they own or are associated with" ON farms;
 CREATE POLICY "Farmers can manage their own farms" ON farms FOR ALL USING (farmer_id = auth.uid());
 -- Note: Vet access to farms temporarily disabled to avoid circular dependency with farm_vet_associations table
 
 -- Crops policies
+DROP POLICY IF EXISTS "Farmers can manage crops on their farms" ON crops;
 CREATE POLICY "Farmers can manage crops on their farms" ON crops FOR ALL USING (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = crops.farm_id AND farms.farmer_id = auth.uid())
 );
 
 -- Livestock policies - Simplified to avoid circular dependencies
+DROP POLICY IF EXISTS "Farmers can manage livestock on their farms" ON livestock;
+DROP POLICY IF EXISTS "Vets can view livestock on associated farms" ON livestock;
 CREATE POLICY "Farmers can manage livestock on their farms" ON livestock FOR ALL USING (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = livestock.farm_id AND farms.farmer_id = auth.uid())
 );
 -- Note: Vet access to livestock temporarily removed to avoid circular dependency
 
 -- Health records policies - Simplified to avoid circular dependencies
+DROP POLICY IF EXISTS "Farmers can manage health records for their animals" ON health_records;
+DROP POLICY IF EXISTS "Farmers can view health records for their animals" ON health_records;
+DROP POLICY IF EXISTS "Vets can view and create health records for associated farms" ON health_records;
 CREATE POLICY "Farmers can manage health records for their animals" ON health_records FOR ALL USING (
   EXISTS (
     SELECT 1 FROM livestock l
@@ -313,16 +348,22 @@ CREATE POLICY "Farmers can manage health records for their animals" ON health_re
 -- Note: Vet access to health records temporarily removed to avoid circular dependency
 
 -- Sales policies
+DROP POLICY IF EXISTS "Farmers can manage sales on their farms" ON sales;
+DROP POLICY IF EXISTS "Farmers can view sales on their farms" ON sales;
 CREATE POLICY "Farmers can manage sales on their farms" ON sales FOR ALL USING (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = sales.farm_id AND farms.farmer_id = auth.uid())
 );
 
 -- Inventory policies
+DROP POLICY IF EXISTS "Farmers can manage inventory on their farms" ON inventory;
 CREATE POLICY "Farmers can manage inventory on their farms" ON inventory FOR ALL USING (
   EXISTS (SELECT 1 FROM farms WHERE farms.id = inventory.farm_id AND farms.farmer_id = auth.uid())
 );
 
 -- Pregnancies policies - Simplified to avoid circular dependencies
+DROP POLICY IF EXISTS "Farmers can manage pregnancies on their farms" ON pregnancies;
+DROP POLICY IF EXISTS "Vets can view and update pregnancies for associated farms" ON pregnancies;
+DROP POLICY IF EXISTS "Vets can update pregnancies" ON pregnancies;
 CREATE POLICY "Farmers can manage pregnancies on their farms" ON pregnancies FOR ALL USING (
   EXISTS (
     SELECT 1 FROM livestock l
@@ -333,6 +374,7 @@ CREATE POLICY "Farmers can manage pregnancies on their farms" ON pregnancies FOR
 -- Note: Vet access to pregnancies temporarily removed to avoid circular dependency
 
 -- Calves policies
+DROP POLICY IF EXISTS "Farmers can manage calves on their farms" ON calves;
 CREATE POLICY "Farmers can manage calves on their farms" ON calves FOR ALL USING (
   EXISTS (
     SELECT 1 FROM livestock l
@@ -342,12 +384,16 @@ CREATE POLICY "Farmers can manage calves on their farms" ON calves FOR ALL USING
 );
 
 -- Vets contacts policies
+DROP POLICY IF EXISTS "Farmers can manage their vet contacts" ON vets_contacts;
 CREATE POLICY "Farmers can manage their vet contacts" ON vets_contacts FOR ALL USING (farmer_id = auth.uid());
 
 -- Notebook policies
+DROP POLICY IF EXISTS "Users can manage their own notes" ON notebook;
 CREATE POLICY "Users can manage their own notes" ON notebook FOR ALL USING (user_id = auth.uid());
 
 -- Marketplace listings policies
+DROP POLICY IF EXISTS "Everyone can view active marketplace listings" ON marketplace_listings;
+DROP POLICY IF EXISTS "Agrovets can manage their own listings" ON marketplace_listings;
 CREATE POLICY "Everyone can view active marketplace listings" ON marketplace_listings FOR SELECT USING (status = 'active');
 CREATE POLICY "Agrovets can manage their own listings" ON marketplace_listings FOR ALL USING (agrovets_id = auth.uid());
 
@@ -360,6 +406,9 @@ ALTER TABLE farm_vet_associations DISABLE ROW LEVEL SECURITY;
 -- In a production environment, you should implement proper RLS policies or use a different approach
 
 -- Marketplace inquiries policies
+DROP POLICY IF EXISTS "Farmers can create inquiries" ON marketplace_inquiries;
+DROP POLICY IF EXISTS "Farmers can view their own inquiries" ON marketplace_inquiries;
+DROP POLICY IF EXISTS "Agrovets can view inquiries for their listings" ON marketplace_inquiries;
 CREATE POLICY "Farmers can create inquiries" ON marketplace_inquiries FOR INSERT WITH CHECK (farmer_id = auth.uid());
 CREATE POLICY "Farmers can view their own inquiries" ON marketplace_inquiries FOR SELECT USING (farmer_id = auth.uid());
 CREATE POLICY "Agrovets can view inquiries for their listings" ON marketplace_inquiries FOR SELECT USING (
@@ -378,6 +427,22 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Drop existing triggers if they exist to avoid conflicts when re-running schema
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+DROP TRIGGER IF EXISTS update_farms_updated_at ON farms;
+DROP TRIGGER IF EXISTS update_crops_updated_at ON crops;
+DROP TRIGGER IF EXISTS update_livestock_updated_at ON livestock;
+DROP TRIGGER IF EXISTS update_health_records_updated_at ON health_records;
+DROP TRIGGER IF EXISTS update_sales_updated_at ON sales;
+DROP TRIGGER IF EXISTS update_inventory_updated_at ON inventory;
+DROP TRIGGER IF EXISTS update_pregnancies_updated_at ON pregnancies;
+DROP TRIGGER IF EXISTS update_calves_updated_at ON calves;
+DROP TRIGGER IF EXISTS update_vets_contacts_updated_at ON vets_contacts;
+DROP TRIGGER IF EXISTS update_notebook_updated_at ON notebook;
+DROP TRIGGER IF EXISTS update_marketplace_listings_updated_at ON marketplace_listings;
+DROP TRIGGER IF EXISTS update_farm_vet_associations_updated_at ON farm_vet_associations;
+DROP TRIGGER IF EXISTS update_marketplace_inquiries_updated_at ON marketplace_inquiries;
 
 -- Apply update_updated_at trigger to all tables
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
