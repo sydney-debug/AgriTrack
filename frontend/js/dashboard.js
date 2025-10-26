@@ -1,5 +1,150 @@
 // Dashboard Module - Role-specific business dashboards
 
+// Utility Functions
+function setActiveMenuItem(activeItem) {
+    console.log('Setting active menu item:', activeItem);
+    // Remove active class from all menu items
+    const menuItems = document.querySelectorAll('.nav-link');
+    menuItems.forEach(item => item.classList.remove('active'));
+
+    // Add active class to specified item
+    const activeElement = document.getElementById(activeItem);
+    if (activeElement) {
+        activeElement.classList.add('active');
+    }
+}
+
+function updatePageTitle(title) {
+    console.log('Updating page title:', title);
+    const pageTitleElement = document.getElementById('pageTitle');
+    if (pageTitleElement) {
+        pageTitleElement.textContent = title;
+    }
+    document.title = title + ' - AgriTrack';
+}
+
+function formatCurrency(amount) {
+    if (!amount || isNaN(amount)) return '₦0.00';
+    return '₦' + parseFloat(amount).toLocaleString('en-NG', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-NG', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    } catch (error) {
+        return dateString;
+    }
+}
+
+// Navigation Functions
+function loadFarmsPage() {
+    console.log('Loading farms page');
+    showToast('Farms page coming soon!', 'info');
+    // TODO: Implement farms page loading
+}
+
+function loadLivestockPage() {
+    console.log('Loading livestock page');
+    showToast('Livestock page coming soon!', 'info');
+    // TODO: Implement livestock page loading
+}
+
+function loadCropsPage() {
+    console.log('Loading crops page');
+    showToast('Crops page coming soon!', 'info');
+    // TODO: Implement crops page loading
+}
+
+function loadSalesPage() {
+    console.log('Loading sales page');
+    showToast('Sales page coming soon!', 'info');
+    // TODO: Implement sales page loading
+}
+
+function loadMarketplacePage() {
+    console.log('Loading marketplace page');
+    showToast('Marketplace page coming soon!', 'info');
+    // TODO: Implement marketplace page loading
+}
+
+function loadHealthRecordsPage() {
+    console.log('Loading health records page');
+    showToast('Health records page coming soon!', 'info');
+    // TODO: Implement health records page loading
+}
+
+function loadAssociationsPage() {
+    console.log('Loading associations page');
+    showToast('Associations page coming soon!', 'info');
+    // TODO: Implement associations page loading
+}
+
+function loadMyListingsPage() {
+    console.log('Loading my listings page');
+    showToast('My listings page coming soon!', 'info');
+    // TODO: Implement my listings page loading
+}
+
+function loadInquiriesPage() {
+    console.log('Loading inquiries page');
+    showToast('Inquiries page coming soon!', 'info');
+    // TODO: Implement inquiries page loading
+}
+
+function showAddReminderModal() {
+    console.log('Opening add reminder modal');
+    showToast('Add reminder feature coming soon!', 'info');
+    // TODO: Implement add reminder modal
+}
+
+function showAddProductModal() {
+    console.log('Opening add product modal');
+    showToast('Add product feature coming soon!', 'info');
+    // TODO: Implement add product modal
+}
+
+function editReminder(userId, reminderId) {
+    console.log('Editing reminder:', reminderId);
+    showToast('Edit reminder feature coming soon!', 'info');
+    // TODO: Implement edit reminder
+}
+
+function deleteReminder(userId, reminderId) {
+    console.log('Deleting reminder:', reminderId);
+    if (confirm('Are you sure you want to delete this reminder?')) {
+        const reminders = JSON.parse(localStorage.getItem('agritrack_reminders') || '{}');
+        if (reminders[userId]) {
+            reminders[userId] = reminders[userId].filter(r => r.id !== reminderId);
+            localStorage.setItem('agritrack_reminders', JSON.stringify(reminders));
+            showToast('Reminder deleted', 'success');
+            loadDashboardHome();
+        }
+    }
+}
+
+function toggleReminder(userId, reminderId) {
+    console.log('Toggling reminder:', reminderId);
+    const reminders = JSON.parse(localStorage.getItem('agritrack_reminders') || '{}');
+    if (reminders[userId]) {
+        const reminder = reminders[userId].find(r => r.id === reminderId);
+        if (reminder) {
+            reminder.completed = !reminder.completed;
+            localStorage.setItem('agritrack_reminders', JSON.stringify(reminders));
+            showToast(reminder.completed ? 'Task completed!' : 'Task marked as pending', 'info');
+            loadDashboardHome();
+        }
+    }
+}
+
 async function loadDashboardHome() {
     console.log('Loading dashboard home');
     setActiveMenuItem('loadDashboardHome');
@@ -37,6 +182,10 @@ async function loadDashboardHome() {
         }
 
         console.log('Profile loaded, loading role-specific dashboard for:', profile.role);
+
+        // Load sidebar menu based on role
+        await loadSidebarMenu(profile.role);
+
         if (profile.role === 'farmer') {
             await loadFarmerDashboard(mainContent, profile);
         } else if (profile.role === 'vet') {
@@ -58,6 +207,11 @@ async function loadDashboardHome() {
 
 // Fallback dashboard when API calls fail
 function showFallbackDashboard(container, user) {
+    console.log('Loading fallback dashboard');
+
+    // Load default sidebar menu (farmer role as default)
+    loadSidebarMenu('farmer');
+
     container.innerHTML = `
         <!-- Welcome Header -->
         <div class="card mb-2">
@@ -749,12 +903,123 @@ function renderRemindersList(userId) {
 
 // Get priority color for badge
 function getPriorityColor(priority) {
-    switch (priority.toLowerCase()) {
+    switch (priority?.toLowerCase()) {
         case 'high': return 'danger';
         case 'medium': return 'warning';
         case 'low': return 'success';
         default: return 'secondary';
     }
+}
+
+// Load sidebar menu based on user role
+async function loadSidebarMenu(role) {
+    console.log('Loading sidebar menu for role:', role);
+    const sidebarMenu = document.getElementById('sidebarMenu');
+    if (!sidebarMenu) {
+        console.error('Sidebar menu element not found');
+        return;
+    }
+
+    let menuItems = '';
+
+    switch (role) {
+        case 'farmer':
+            menuItems = `
+                <li class="nav-item">
+                    <a class="nav-link active" id="loadDashboardHome" href="#" onclick="loadDashboardHome(); return false;">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="loadFarmsPage" href="#" onclick="loadFarmsPage(); return false;">
+                        <i class="fas fa-map-marked-alt"></i> Farms
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="loadLivestockPage" href="#" onclick="loadLivestockPage(); return false;">
+                        <i class="fas fa-cow"></i> Livestock
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="loadCropsPage" href="#" onclick="loadCropsPage(); return false;">
+                        <i class="fas fa-seedling"></i> Crops
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="loadSalesPage" href="#" onclick="loadSalesPage(); return false;">
+                        <i class="fas fa-dollar-sign"></i> Sales
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="loadMarketplacePage" href="#" onclick="loadMarketplacePage(); return false;">
+                        <i class="fas fa-store"></i> Marketplace
+                    </a>
+                </li>
+            `;
+            break;
+
+        case 'vet':
+            menuItems = `
+                <li class="nav-item">
+                    <a class="nav-link active" id="loadDashboardHome" href="#" onclick="loadDashboardHome(); return false;">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="loadHealthRecordsPage" href="#" onclick="loadHealthRecordsPage(); return false;">
+                        <i class="fas fa-heartbeat"></i> Health Records
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="loadLivestockPage" href="#" onclick="loadLivestockPage(); return false;">
+                        <i class="fas fa-cow"></i> Livestock
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="loadAssociationsPage" href="#" onclick="loadAssociationsPage(); return false;">
+                        <i class="fas fa-handshake"></i> Farm Associations
+                    </a>
+                </li>
+            `;
+            break;
+
+        case 'agrovets':
+            menuItems = `
+                <li class="nav-item">
+                    <a class="nav-link active" id="loadDashboardHome" href="#" onclick="loadDashboardHome(); return false;">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="loadMyListingsPage" href="#" onclick="loadMyListingsPage(); return false;">
+                        <i class="fas fa-box"></i> My Products
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="loadInquiriesPage" href="#" onclick="loadInquiriesPage(); return false;">
+                        <i class="fas fa-envelope"></i> Inquiries
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="loadMarketplacePage" href="#" onclick="loadMarketplacePage(); return false;">
+                        <i class="fas fa-store"></i> Marketplace
+                    </a>
+                </li>
+            `;
+            break;
+
+        default:
+            menuItems = `
+                <li class="nav-item">
+                    <a class="nav-link active" id="loadDashboardHome" href="#" onclick="loadDashboardHome(); return false;">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+            `;
+    }
+
+    sidebarMenu.innerHTML = menuItems;
+    console.log('Sidebar menu loaded successfully');
 }
 
 // Show add reminder modal
