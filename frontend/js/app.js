@@ -264,14 +264,14 @@ function showLoading() {
     }
     spinner.style.display = 'flex';
 
-    // Safety timeout: hide loading spinner after 10 seconds regardless
+    // Safety timeout: hide loading spinner after 15 seconds regardless
     setTimeout(() => {
         const safetySpinner = document.querySelector('.spinner-overlay');
         if (safetySpinner && safetySpinner.style.display !== 'none') {
             console.log('Safety timeout: hiding loading spinner');
             safetySpinner.style.display = 'none';
         }
-    }, 10000);
+    }, 15000);
 }
 
 function hideLoading() {

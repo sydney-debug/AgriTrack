@@ -45,49 +45,63 @@ const Auth = {
                 console.error('❌ Users table test failed:', testErr);
             }
 
-            // Check if user profile exists in our users table
-            const { data: profile, error } = await window.supabase
-                .from('users')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-
-            console.log('📊 Profile query result:', { profile, error });
-
-            if (error && error.code === 'PGRST116') {
-                console.log('❌ User profile not found, creating profile');
-                // User doesn't exist in our table, create profile
-                const role = user.user_metadata?.role || 'farmer';
-                console.log('👤 Creating profile with role:', role);
-
-                const createResult = await this.createUserProfile(user, role);
-                console.log('✅ Profile creation result:', createResult);
-
-                // Try to get the profile again after creation
-                const { data: newProfile, error: newError } = await window.supabase
+            // Check if user profile exists in our users table with timeout
+            let profile = null;
+            try {
+                console.log('🔍 Querying users table with timeout protection...');
+                const profileQuery = window.supabase
                     .from('users')
                     .select('*')
                     .eq('id', user.id)
                     .single();
 
-                console.log('📊 New profile query result:', { newProfile, newError });
+                // Add timeout to prevent hanging
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Database query timeout')), 3000)
+                );
 
-                if (newProfile) {
-                    profile = newProfile;
-                    console.log('✅ Using newly created profile');
-                } else {
-                    console.warn('⚠️ Profile creation failed, proceeding without profile');
+                const { data, error } = await Promise.race([profileQuery, timeoutPromise]);
+                profile = data;
+
+                console.log('📊 Profile query result:', { profile, error });
+
+                if (error && error.code === 'PGRST116') {
+                    console.log('❌ User profile not found, creating profile');
+                    const role = user.user_metadata?.role || 'farmer';
+
+                    const createQuery = window.supabase
+                        .from('users')
+                        .insert({
+                            id: user.id,
+                            email: user.email,
+                            role: role,
+                            full_name: user.user_metadata?.full_name || user.email.split('@')[0]
+                        });
+
+                    const createTimeoutPromise = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('Profile creation timeout')), 3000)
+                    );
+
+                    try {
+                        const { data: createData, error: createError } = await Promise.race([createQuery, createTimeoutPromise]);
+                        console.log('✅ Profile creation result:', { createData, createError });
+
+                        if (createData && !createError) {
+                            profile = createData;
+                        }
+                    } catch (createErr) {
+                        console.error('❌ Profile creation failed:', createErr);
+                    }
+                } else if (error) {
+                    console.error('❌ Error fetching profile:', error);
                 }
-            } else if (error) {
-                console.error('❌ Error fetching profile:', error);
-                showToast('Error loading user profile', 'warning');
+            } catch (queryError) {
+                console.error('❌ Database query failed:', queryError);
             }
 
-            console.log('🔄 Final profile data:', profile);
-
-            // If we still don't have a profile, create a fallback one
+            // Create fallback profile if database queries failed
             if (!profile) {
-                console.log('🛡️ Using fallback profile data');
+                console.log('🛡️ Using fallback profile data due to database issues');
                 profile = {
                     id: user.id,
                     email: user.email,
@@ -95,6 +109,8 @@ const Auth = {
                     full_name: user.user_metadata?.full_name || user.email.split('@')[0]
                 };
             }
+
+            console.log('🔄 Final profile data:', profile);
 
             console.log('Hiding login elements and showing dashboard');
             // Enhanced hiding of login elements (same as login forms)
@@ -220,7 +236,7 @@ const Auth = {
         try {
             console.log('🔄 Creating user profile:', { id: user.id, email: user.email, role: role });
 
-            const { data, error } = await window.supabase
+            const createPromise = window.supabase
                 .from('users')
                 .insert({
                     id: user.id,
@@ -228,6 +244,12 @@ const Auth = {
                     role: role,
                     full_name: user.user_metadata?.full_name || user.email.split('@')[0]
                 });
+
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Profile creation timeout')), 3000)
+            );
+
+            const { data, error } = await Promise.race([createPromise, timeoutPromise]);
 
             console.log('📊 Profile creation result:', { data, error });
 
@@ -273,11 +295,17 @@ const Auth = {
     async getUserProfile(userId) {
         try {
             console.log('🔍 Querying users table for ID:', userId);
-            const { data, error } = await window.supabase
+            const queryPromise = window.supabase
                 .from('users')
                 .select('*')
                 .eq('id', userId)
                 .single();
+
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Profile query timeout')), 3000)
+            );
+
+            const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
 
             console.log('📊 Users table query result:', { data, error });
 

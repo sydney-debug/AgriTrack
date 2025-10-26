@@ -337,16 +337,39 @@ async function loadFarmerDashboard(container, profile) {
     const user = Auth.getCurrentUser();
 
     try {
-        // Fetch farmer's data using new API with error handling
-        const farmsResult = await API.farms.getAll();
-        const livestockResult = await API.livestock.getAll();
-        const cropsResult = await API.crops.getAll();
-        const salesResult = await API.sales.getAll();
+        console.log('🔄 Loading farmer dashboard data...');
+
+        // Try to fetch farmer's data with timeout protection
+        const apiPromises = [
+            API.farms.getAll(),
+            API.livestock.getAll(),
+            API.crops.getAll(),
+            API.sales.getAll()
+        ];
+
+        const timeoutPromises = apiPromises.map((_, index) =>
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error(`API call ${index} timeout`)), 5000)
+            )
+        );
+
+        const results = await Promise.allSettled(
+            apiPromises.map((promise, index) => Promise.race([promise, timeoutPromises[index]]))
+        );
+
+        console.log('📊 API call results:', results.map(r => r.status));
+
+        const farmsResult = results[0].status === 'fulfilled' ? results[0].value : { success: false };
+        const livestockResult = results[1].status === 'fulfilled' ? results[1].value : { success: false };
+        const cropsResult = results[2].status === 'fulfilled' ? results[2].value : { success: false };
+        const salesResult = results[3].status === 'fulfilled' ? results[3].value : { success: false };
 
         const farms = farmsResult.success ? farmsResult.data.farms : [];
         const livestock = livestockResult.success ? livestockResult.data.livestock : [];
         const crops = cropsResult.success ? cropsResult.data.crops : [];
         const sales = salesResult.success ? salesResult.data.sales : [];
+
+        console.log('📈 Dashboard data loaded:', { farms: farms.length, livestock: livestock.length, crops: crops.length, sales: sales.length });
 
         // Calculate summary stats
         const totalRevenue = sales.reduce((sum, sale) => sum + parseFloat(sale.total_amount || 0), 0);
@@ -507,10 +530,33 @@ function renderFarmerDashboard(container, profile, farms, livestock, crops, sale
 
 // Vet Dashboard
 async function loadVetDashboard(container, profile) {
+    const user = Auth.getCurrentUser();
+
     try {
-        const farmsResult = await API.farms.getAll();
-        const healthRecordsResult = await API.healthRecords.getAll();
-        const associationsResult = await API.associations.getAll();
+        console.log('🔄 Loading vet dashboard data...');
+
+        // Try to fetch vet's data with timeout protection
+        const apiPromises = [
+            API.farms.getAll(),
+            API.healthRecords.getAll(),
+            API.associations.getAll()
+        ];
+
+        const timeoutPromises = apiPromises.map((_, index) =>
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error(`API call ${index} timeout`)), 5000)
+            )
+        );
+
+        const results = await Promise.allSettled(
+            apiPromises.map((promise, index) => Promise.race([promise, timeoutPromises[index]]))
+        );
+
+        console.log('📊 Vet API call results:', results.map(r => r.status));
+
+        const farmsResult = results[0].status === 'fulfilled' ? results[0].value : { success: false };
+        const healthRecordsResult = results[1].status === 'fulfilled' ? results[1].value : { success: false };
+        const associationsResult = results[2].status === 'fulfilled' ? results[2].value : { success: false };
 
         const farms = farmsResult.success ? farmsResult.data.farms : [];
         const healthRecords = healthRecordsResult.success ? healthRecordsResult.data.health_records : [];
@@ -660,10 +706,33 @@ function renderVetDashboard(container, profile, farms, healthRecords, associatio
 
 // Agrovets Dashboard
 async function loadAgrovetsDashboard(container, profile) {
+    const user = Auth.getCurrentUser();
+
     try {
-        const listingsResult = await API.marketplace.getMyListings();
-        const inquiriesResult = await API.marketplace.getInquiries();
-        const analyticsResult = await API.marketplace.getAnalytics();
+        console.log('🔄 Loading agrovets dashboard data...');
+
+        // Try to fetch agrovets data with timeout protection
+        const apiPromises = [
+            API.marketplace.getMyListings(),
+            API.marketplace.getInquiries(),
+            API.marketplace.getAnalytics()
+        ];
+
+        const timeoutPromises = apiPromises.map((_, index) =>
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error(`API call ${index} timeout`)), 5000)
+            )
+        );
+
+        const results = await Promise.allSettled(
+            apiPromises.map((promise, index) => Promise.race([promise, timeoutPromises[index]]))
+        );
+
+        console.log('📊 Agrovets API call results:', results.map(r => r.status));
+
+        const listingsResult = results[0].status === 'fulfilled' ? results[0].value : { success: false };
+        const inquiriesResult = results[1].status === 'fulfilled' ? results[1].value : { success: false };
+        const analyticsResult = results[2].status === 'fulfilled' ? results[2].value : { success: false };
 
         const listings = listingsResult.success ? listingsResult.data.listings : [];
         const inquiries = inquiriesResult.success ? inquiriesResult.data.inquiries : [];
