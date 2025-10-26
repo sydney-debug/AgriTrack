@@ -41,12 +41,23 @@ const Auth = {
             await this.createUserProfile(user, role);
         }
 
-        // Hide login form and show dashboard
-        this.redirectToDashboard();
+        // Immediately hide login form and show dashboard (same as login forms)
+        hideAllPages();
+        document.getElementById('dashboardPage').style.display = 'block';
+        document.getElementById('mainNav').style.display = 'block';
+
+        // Update navigation with user info
+        document.getElementById('userNameNav').textContent = profile?.full_name || user.email;
+
+        // Load dashboard content
+        setTimeout(() => {
+            loadDashboardHome();
+        }, 100);
     },
 
     // Handle sign out
     handleSignOut() {
+        console.log('User signed out, redirecting to landing page');
         showLanding();
         document.getElementById('mainNav').style.display = 'none';
     },
@@ -123,10 +134,6 @@ const Auth = {
 
             if (error) {
                 console.error('Login error:', error);
-                if (error.message.includes('Invalid API key')) {
-                    showErrorModal();
-                    return { success: false, error: 'Configuration error. Please refresh the page.' };
-                }
                 return {
                     success: false,
                     error: error.message || 'Login failed'
@@ -136,10 +143,6 @@ const Auth = {
             return { success: true, user: data.user };
         } catch (error) {
             console.error('Login error:', error);
-            if (error.message.includes('Invalid API key')) {
-                showErrorModal();
-                return { success: false, error: 'Configuration error. Please refresh the page.' };
-            }
             return {
                 success: false,
                 error: error.message || 'Login failed'
@@ -164,10 +167,6 @@ const Auth = {
 
             if (error) {
                 console.error('Signup error:', error);
-                if (error.message.includes('Invalid API key')) {
-                    showErrorModal();
-                    return { success: false, error: 'Configuration error. Please refresh the page.' };
-                }
                 return {
                     success: false,
                     error: error.message || 'Signup failed'
@@ -180,10 +179,6 @@ const Auth = {
             };
         } catch (error) {
             console.error('Signup error:', error);
-            if (error.message.includes('Invalid API key')) {
-                showErrorModal();
-                return { success: false, error: 'Configuration error. Please refresh the page.' };
-            }
             return {
                 success: false,
                 error: error.message || 'Signup failed'
@@ -198,21 +193,14 @@ const Auth = {
             if (error) {
                 console.error('Logout error:', error);
             }
+
+            // Immediately show landing page after logout
+            showLanding();
         } catch (error) {
             console.error('Logout error:', error);
+            // Still show landing page even if there's an error
+            showLanding();
         }
-    },
-
-    // Redirect to dashboard
-    redirectToDashboard() {
-        hideAllPages();
-        document.getElementById('dashboardPage').style.display = 'block';
-        document.getElementById('mainNav').style.display = 'block';
-
-        // Load dashboard based on user role
-        setTimeout(() => {
-            loadDashboardHome();
-        }, 100);
     }
 };
 
@@ -225,10 +213,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { data: { session }, error } = await window.supabase.auth.getSession();
         if (error) {
             console.error('Session check error:', error);
-            if (error.message.includes('Invalid API key')) {
-                showErrorModal();
-                return;
-            }
             showLanding();
             return;
         }
@@ -240,15 +224,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (error) {
         console.error('Initialization error:', error);
-        if (error.message.includes('Invalid API key')) {
-            showErrorModal();
-        } else {
-            showLanding();
-        }
+        showErrorModal();
     }
 });
 
-// Show error modal for API key issues
+// Show error modal for authentication issues
 function showErrorModal() {
     const modalHtml = `
         <div class="modal fade" id="errorModal" tabindex="-1">
@@ -256,28 +236,26 @@ function showErrorModal() {
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title text-danger">
-                            <i class="fas fa-exclamation-triangle"></i> Configuration Error
+                            <i class="fas fa-exclamation-triangle"></i> Authentication Error
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <p><strong>Supabase API key has expired or is invalid.</strong></p>
-                        <p>To fix this issue:</p>
+                        <p><strong>There was an error with the authentication system.</strong></p>
+                        <p>Please try the following:</p>
                         <ol>
-                            <li>Go to <a href="https://supabase.com/dashboard/project/txgkmhjumamvcavvsolp/settings/api" target="_blank">Supabase Dashboard</a></li>
-                            <li>Copy the fresh API key from "Project API keys" section</li>
-                            <li>Update <code>frontend/js/config.js</code> with the new key</li>
                             <li>Refresh the page</li>
+                            <li>Clear your browser cache and cookies</li>
+                            <li>Try logging in again</li>
+                            <li>If the problem persists, contact support</li>
                         </ol>
-                        <div class="alert alert-warning">
-                            <strong>Note:</strong> API keys should be managed securely in production environments.
-                        </div>
                         <div class="alert alert-info">
                             <strong>Console Output:</strong> Check the browser console for detailed error information.
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="location.reload()">Refresh Page</button>
                     </div>
                 </div>
             </div>
@@ -307,7 +285,16 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
 
     if (result.success) {
         showToast('Login successful!', 'success');
-        // Auth state change will handle the redirect
+
+        // Immediately hide login form and show dashboard
+        hideAllPages();
+        document.getElementById('dashboardPage').style.display = 'block';
+        document.getElementById('mainNav').style.display = 'block';
+
+        // Load dashboard content
+        setTimeout(() => {
+            loadDashboardHome();
+        }, 100);
     } else {
         showToast(result.error, 'error');
     }
@@ -352,7 +339,16 @@ document.getElementById('landingLoginForm')?.addEventListener('submit', async (e
 
     if (result.success) {
         showToast('Login successful!', 'success');
-        // Auth state change will handle the redirect
+
+        // Immediately hide landing page and show dashboard
+        hideAllPages();
+        document.getElementById('dashboardPage').style.display = 'block';
+        document.getElementById('mainNav').style.display = 'block';
+
+        // Load dashboard content
+        setTimeout(() => {
+            loadDashboardHome();
+        }, 100);
     } else {
         showToast(result.error, 'error');
     }
