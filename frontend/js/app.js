@@ -2,6 +2,8 @@
 
 // Show/hide page functions
 function showLanding() {
+    console.log('Showing landing page');
+
     // Enhanced hiding of all other elements
     const loginPage = document.getElementById('loginPage');
     const signupPage = document.getElementById('signupPage');
@@ -21,12 +23,18 @@ function showLanding() {
     if (dashboardPage) {
         dashboardPage.style.display = 'none';
         dashboardPage.style.visibility = 'hidden';
+        // Remove authenticated classes
+        dashboardPage.classList.remove('authenticated');
     }
 
     if (profilePage) {
         profilePage.style.display = 'none';
         profilePage.style.visibility = 'hidden';
     }
+
+    // Remove dashboard-active class from body
+    const body = document.body;
+    body.classList.remove('dashboard-active');
 
     // Show landing page and ensure login cards are visible
     const landingPage = document.getElementById('landingPage');
@@ -46,6 +54,8 @@ function showLanding() {
         mainNav.style.display = 'none';
         mainNav.style.visibility = 'hidden';
     }
+
+    console.log('Landing page shown, authenticated classes removed');
 }
 
 function showLogin() {
@@ -143,6 +153,8 @@ function showSignup() {
 }
 
 function showDashboard() {
+    console.log('Showing dashboard');
+
     // Enhanced hiding of all login elements
     const loginPage = document.getElementById('loginPage');
     const landingPage = document.getElementById('landingPage');
@@ -171,16 +183,22 @@ function showDashboard() {
     // Show dashboard and navigation
     const dashboardPage = document.getElementById('dashboardPage');
     const mainNav = document.getElementById('mainNav');
+    const body = document.body;
 
     if (dashboardPage) {
         dashboardPage.style.display = 'block';
         dashboardPage.style.visibility = 'visible';
+        dashboardPage.classList.add('authenticated');
     }
 
     if (mainNav) {
         mainNav.style.display = 'block';
         mainNav.style.visibility = 'visible';
     }
+
+    // Add dashboard-active class to body
+    body.classList.add('dashboard-active');
+    console.log('Dashboard shown with authenticated classes');
 }
 
 function hideAllPages() {
@@ -228,19 +246,36 @@ function showToast(message, type = 'info') {
     }
 }
 
-// Loading spinner
 function showLoading() {
+    console.log('Showing loading spinner');
     let spinner = document.querySelector('.spinner-overlay');
     if (!spinner) {
         spinner = document.createElement('div');
         spinner.className = 'spinner-overlay';
-        spinner.innerHTML = '<div class="spinner-border spinner-border-custom text-light" role="status"><span class="visually-hidden">Loading...</span></div>';
+        spinner.innerHTML = `
+            <div class="d-flex flex-column align-items-center justify-content-center">
+                <div class="spinner-border spinner-border-custom text-light mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div class="text-white">Loading...</div>
+            </div>
+        `;
         document.body.appendChild(spinner);
     }
     spinner.style.display = 'flex';
+
+    // Safety timeout: hide loading spinner after 10 seconds regardless
+    setTimeout(() => {
+        const safetySpinner = document.querySelector('.spinner-overlay');
+        if (safetySpinner && safetySpinner.style.display !== 'none') {
+            console.log('Safety timeout: hiding loading spinner');
+            safetySpinner.style.display = 'none';
+        }
+    }, 10000);
 }
 
 function hideLoading() {
+    console.log('Hiding loading spinner');
     const spinner = document.querySelector('.spinner-overlay');
     if (spinner) {
         spinner.style.display = 'none';

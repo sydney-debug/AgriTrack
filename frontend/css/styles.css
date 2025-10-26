@@ -354,23 +354,36 @@ body {
     border-radius: 4px;
 }
 
-/* Login form visibility control */
+/* Login form visibility control - Enhanced */
 #loginPage.hidden,
 #signupPage.hidden,
 #landingPage.hidden,
 .card.login-hidden {
     display: none !important;
     visibility: hidden !important;
+    opacity: 0 !important;
 }
 
 #landingPage .card.login-hidden {
     display: none !important;
 }
 
-/* Ensure dashboard is always visible when authenticated */
+/* Ensure dashboard takes full space when shown */
+#dashboardPage {
+    min-height: 100vh;
+    width: 100%;
+}
+
 #dashboardPage.authenticated {
     display: block !important;
     visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Hide loading spinner when dashboard is active */
+#dashboardPage.authenticated ~ .spinner-overlay,
+body.dashboard-active .spinner-overlay {
+    display: none !important;
 }
 
 /* Enhanced page transitions */
@@ -381,4 +394,21 @@ body {
 
 .page-transition.show {
     opacity: 1;
+}
+
+/* Ensure main content area takes full available space */
+#mainContent {
+    flex: 1;
+    width: 100%;
+}
+
+/* Responsive dashboard layout */
+@media (max-width: 768px) {
+    #dashboardPage {
+        padding: 0;
+    }
+
+    #mainContent {
+        padding: 10px;
+    }
 }

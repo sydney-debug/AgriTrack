@@ -28,64 +28,80 @@ const Auth = {
     async handleSignIn(session) {
         const user = session.user;
 
-        // Check if user profile exists in our users table
-        const { data: profile, error } = await window.supabase
-            .from('users')
-            .select('*')
-            .eq('id', user.id)
-            .single();
+        console.log('Handling sign in for user:', user.email);
 
-        if (error && error.code === 'PGRST116') {
-            // User doesn't exist in our table, create profile
-            const role = user.user_metadata?.role || 'farmer';
-            await this.createUserProfile(user, role);
-        }
+        try {
+            // Check if user profile exists in our users table
+            const { data: profile, error } = await window.supabase
+                .from('users')
+                .select('*')
+                .eq('id', user.id)
+                .single();
 
-        // Enhanced hiding of login elements (same as login forms)
-        const loginPage = document.getElementById('loginPage');
-        const landingPage = document.getElementById('landingPage');
-
-        if (loginPage) {
-            loginPage.style.display = 'none';
-            loginPage.style.visibility = 'hidden';
-        }
-
-        if (landingPage) {
-            landingPage.style.display = 'none';
-            landingPage.style.visibility = 'hidden';
-            // Also hide any login cards within landing page
-            const loginCards = landingPage.querySelectorAll('.card');
-            loginCards.forEach(card => {
-                card.style.display = 'none';
-            });
-        }
-
-        // Show dashboard explicitly
-        const dashboardPage = document.getElementById('dashboardPage');
-        const mainNav = document.getElementById('mainNav');
-
-        if (dashboardPage) {
-            dashboardPage.style.display = 'block';
-            dashboardPage.style.visibility = 'visible';
-        }
-
-        if (mainNav) {
-            mainNav.style.display = 'block';
-            mainNav.style.visibility = 'visible';
-        }
-
-        // Update navigation with user info
-        if (mainNav) {
-            const userNameNav = document.getElementById('userNameNav');
-            if (userNameNav) {
-                userNameNav.textContent = profile?.full_name || user.email;
+            if (error && error.code === 'PGRST116') {
+                console.log('User profile not found, creating profile');
+                // User doesn't exist in our table, create profile
+                const role = user.user_metadata?.role || 'farmer';
+                await this.createUserProfile(user, role);
             }
-        }
 
-        // Load dashboard content
-        setTimeout(() => {
-            loadDashboardHome();
-        }, 100);
+            console.log('Hiding login elements and showing dashboard');
+            // Enhanced hiding of login elements (same as login forms)
+            const loginPage = document.getElementById('loginPage');
+            const landingPage = document.getElementById('landingPage');
+
+            if (loginPage) {
+                loginPage.style.display = 'none';
+                loginPage.style.visibility = 'hidden';
+            }
+
+            if (landingPage) {
+                landingPage.style.display = 'none';
+                landingPage.style.visibility = 'hidden';
+                // Also hide any login cards within landing page
+                const loginCards = landingPage.querySelectorAll('.card');
+                loginCards.forEach(card => {
+                    card.style.display = 'none';
+                });
+            }
+
+            // Show dashboard explicitly
+            const dashboardPage = document.getElementById('dashboardPage');
+            const mainNav = document.getElementById('mainNav');
+
+            if (dashboardPage) {
+                dashboardPage.style.display = 'block';
+                dashboardPage.style.visibility = 'visible';
+                dashboardPage.classList.add('authenticated');
+            }
+
+            if (mainNav) {
+                mainNav.style.display = 'block';
+                mainNav.style.visibility = 'visible';
+            }
+
+            // Add dashboard-active class to body
+            document.body.classList.add('dashboard-active');
+
+            // Update navigation with user info
+            if (mainNav) {
+                const userNameNav = document.getElementById('userNameNav');
+                if (userNameNav) {
+                    userNameNav.textContent = profile?.full_name || user.email;
+                }
+            }
+
+            console.log('Dashboard elements shown, loading dashboard content');
+            // Load dashboard content
+            setTimeout(() => {
+                loadDashboardHome();
+            }, 100);
+        } catch (error) {
+            console.error('Error in handleSignIn:', error);
+            showToast('Error setting up dashboard: ' + error.message, 'error');
+            // Still try to show dashboard even if there's an error
+            showDashboard();
+        }
     },
 
     // Handle sign out
@@ -95,7 +111,7 @@ const Auth = {
         // Enhanced sign out: properly show landing page with login cards
         const loginPage = document.getElementById('loginPage');
         const signupPage = document.getElementById('signupPage');
-        const dashboardPage = document.getElementById('dashboardPage');
+        const dashboardElement = document.getElementById('dashboardPage');
         const profilePage = document.getElementById('profilePage');
         const landingPage = document.getElementById('landingPage');
         const mainNav = document.getElementById('mainNav');
@@ -111,9 +127,9 @@ const Auth = {
             signupPage.style.visibility = 'hidden';
         }
 
-        if (dashboardPage) {
-            dashboardPage.style.display = 'none';
-            dashboardPage.style.visibility = 'hidden';
+        if (dashboardElement) {
+            dashboardElement.style.display = 'none';
+            dashboardElement.style.visibility = 'hidden';
         }
 
         if (profilePage) {
@@ -126,7 +142,13 @@ const Auth = {
             mainNav.style.visibility = 'hidden';
         }
 
-        // Show landing page with login cards
+        // Remove authenticated classes
+        if (dashboardElement) {
+            dashboardElement.classList.remove('authenticated');
+        }
+        const bodyElement = document.body;
+        bodyElement.classList.remove('dashboard-active');
+
         if (landingPage) {
             landingPage.style.display = 'flex';
             landingPage.style.visibility = 'visible';
@@ -273,7 +295,7 @@ const Auth = {
             // Enhanced logout: properly show landing page with login cards
             const loginPage = document.getElementById('loginPage');
             const signupPage = document.getElementById('signupPage');
-            const dashboardPage = document.getElementById('dashboardPage');
+            const dashboardElement = document.getElementById('dashboardPage');
             const profilePage = document.getElementById('profilePage');
             const landingPage = document.getElementById('landingPage');
             const mainNav = document.getElementById('mainNav');
@@ -289,9 +311,9 @@ const Auth = {
                 signupPage.style.visibility = 'hidden';
             }
 
-            if (dashboardPage) {
-                dashboardPage.style.display = 'none';
-                dashboardPage.style.visibility = 'hidden';
+            if (dashboardElement) {
+                dashboardElement.style.display = 'none';
+                dashboardElement.style.visibility = 'hidden';
             }
 
             if (profilePage) {
@@ -304,7 +326,12 @@ const Auth = {
                 mainNav.style.visibility = 'hidden';
             }
 
-            // Show landing page with login cards
+            // Remove authenticated classes
+            if (dashboardElement) {
+                dashboardElement.classList.remove('authenticated');
+            }
+            const bodyElement = document.body;
+            bodyElement.classList.remove('dashboard-active');
             if (landingPage) {
                 landingPage.style.display = 'flex';
                 landingPage.style.visibility = 'visible';
@@ -399,52 +426,68 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
 
+    console.log('Login attempt started');
     showLoading();
-    const result = await Auth.login(email, password);
-    hideLoading();
 
-    if (result.success) {
-        showToast('Login successful!', 'success');
+    try {
+        const result = await Auth.login(email, password);
 
-        // More explicit hiding of login elements
-        const loginPage = document.getElementById('loginPage');
-        const landingPage = document.getElementById('landingPage');
+        if (result.success) {
+            console.log('Login successful, hiding login elements and showing dashboard');
+            showToast('Login successful!', 'success');
 
-        if (loginPage) {
-            loginPage.style.display = 'none';
-            loginPage.style.visibility = 'hidden';
+            // More explicit hiding of login elements
+            const loginPage = document.getElementById('loginPage');
+            const landingPage = document.getElementById('landingPage');
+
+            if (loginPage) {
+                loginPage.style.display = 'none';
+                loginPage.style.visibility = 'hidden';
+            }
+
+            if (landingPage) {
+                landingPage.style.display = 'none';
+                landingPage.style.visibility = 'hidden';
+                // Also hide any login cards within landing page
+                const loginCards = landingPage.querySelectorAll('.card');
+                loginCards.forEach(card => {
+                    card.style.display = 'none';
+                });
+            }
+
+            // Show dashboard explicitly
+            const dashboardPage = document.getElementById('dashboardPage');
+            const mainNav = document.getElementById('mainNav');
+
+            if (dashboardPage) {
+                dashboardPage.style.display = 'block';
+                dashboardPage.style.visibility = 'visible';
+                dashboardPage.classList.add('authenticated');
+            }
+
+            if (mainNav) {
+                mainNav.style.display = 'block';
+                mainNav.style.visibility = 'visible';
+            }
+
+            // Add dashboard-active class to body
+            document.body.classList.add('dashboard-active');
+
+            console.log('Dashboard elements shown, loading dashboard content');
+            // Load dashboard content
+            setTimeout(() => {
+                loadDashboardHome();
+            }, 100);
+        } else {
+            console.error('Login failed:', result.error);
+            showToast(result.error, 'error');
         }
-
-        if (landingPage) {
-            landingPage.style.display = 'none';
-            landingPage.style.visibility = 'hidden';
-            // Also hide any login cards within landing page
-            const loginCards = landingPage.querySelectorAll('.card');
-            loginCards.forEach(card => {
-                card.style.display = 'none';
-            });
-        }
-
-        // Show dashboard explicitly
-        const dashboardPage = document.getElementById('dashboardPage');
-        const mainNav = document.getElementById('mainNav');
-
-        if (dashboardPage) {
-            dashboardPage.style.display = 'block';
-            dashboardPage.style.visibility = 'visible';
-        }
-
-        if (mainNav) {
-            mainNav.style.display = 'block';
-            mainNav.style.visibility = 'visible';
-        }
-
-        // Load dashboard content
-        setTimeout(() => {
-            loadDashboardHome();
-        }, 100);
-    } else {
-        showToast(result.error, 'error');
+    } catch (error) {
+        console.error('Login error:', error);
+        showToast('Login failed: ' + error.message, 'error');
+    } finally {
+        console.log('Hiding loading spinner');
+        hideLoading();
     }
 });
 
@@ -481,52 +524,68 @@ document.getElementById('landingLoginForm')?.addEventListener('submit', async (e
     const email = document.getElementById('landingLoginEmail').value;
     const password = document.getElementById('landingLoginPassword').value;
 
+    console.log('Landing page login attempt started');
     showLoading();
-    const result = await Auth.login(email, password);
-    hideLoading();
 
-    if (result.success) {
-        showToast('Login successful!', 'success');
+    try {
+        const result = await Auth.login(email, password);
 
-        // More explicit hiding of login elements (same as login form)
-        const loginPage = document.getElementById('loginPage');
-        const landingPage = document.getElementById('landingPage');
+        if (result.success) {
+            console.log('Landing page login successful, hiding login elements and showing dashboard');
+            showToast('Login successful!', 'success');
 
-        if (loginPage) {
-            loginPage.style.display = 'none';
-            loginPage.style.visibility = 'hidden';
+            // More explicit hiding of login elements (same as login form)
+            const loginPage = document.getElementById('loginPage');
+            const landingPage = document.getElementById('landingPage');
+
+            if (loginPage) {
+                loginPage.style.display = 'none';
+                loginPage.style.visibility = 'hidden';
+            }
+
+            if (landingPage) {
+                landingPage.style.display = 'none';
+                landingPage.style.visibility = 'hidden';
+                // Also hide any login cards within landing page
+                const loginCards = landingPage.querySelectorAll('.card');
+                loginCards.forEach(card => {
+                    card.style.display = 'none';
+                });
+            }
+
+            // Show dashboard explicitly
+            const dashboardPage = document.getElementById('dashboardPage');
+            const mainNav = document.getElementById('mainNav');
+
+            if (dashboardPage) {
+                dashboardPage.style.display = 'block';
+                dashboardPage.style.visibility = 'visible';
+                dashboardPage.classList.add('authenticated');
+            }
+
+            if (mainNav) {
+                mainNav.style.display = 'block';
+                mainNav.style.visibility = 'visible';
+            }
+
+            // Add dashboard-active class to body
+            document.body.classList.add('dashboard-active');
+
+            console.log('Dashboard elements shown, loading dashboard content');
+            // Load dashboard content
+            setTimeout(() => {
+                loadDashboardHome();
+            }, 100);
+        } else {
+            console.error('Landing page login failed:', result.error);
+            showToast(result.error, 'error');
         }
-
-        if (landingPage) {
-            landingPage.style.display = 'none';
-            landingPage.style.visibility = 'hidden';
-            // Also hide any login cards within landing page
-            const loginCards = landingPage.querySelectorAll('.card');
-            loginCards.forEach(card => {
-                card.style.display = 'none';
-            });
-        }
-
-        // Show dashboard explicitly
-        const dashboardPage = document.getElementById('dashboardPage');
-        const mainNav = document.getElementById('mainNav');
-
-        if (dashboardPage) {
-            dashboardPage.style.display = 'block';
-            dashboardPage.style.visibility = 'visible';
-        }
-
-        if (mainNav) {
-            mainNav.style.display = 'block';
-            mainNav.style.visibility = 'visible';
-        }
-
-        // Load dashboard content
-        setTimeout(() => {
-            loadDashboardHome();
-        }, 100);
-    } else {
-        showToast(result.error, 'error');
+    } catch (error) {
+        console.error('Landing page login error:', error);
+        showToast('Login failed: ' + error.message, 'error');
+    } finally {
+        console.log('Hiding loading spinner from landing page login');
+        hideLoading();
     }
 });
 

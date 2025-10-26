@@ -1,26 +1,42 @@
 // Dashboard Module - Role-specific business dashboards
 
 async function loadDashboardHome() {
+    console.log('Loading dashboard home');
     setActiveMenuItem('loadDashboardHome');
     updatePageTitle('Business Dashboard');
 
     const user = await Auth.getCurrentUser();
     if (!user) {
+        console.log('No user found, showing landing page');
         showLanding();
         return;
     }
 
+    console.log('User found, showing dashboard');
     const mainContent = document.getElementById('mainContent');
+    const dashboardPage = document.getElementById('dashboardPage');
+    const body = document.body;
+
+    // Add authenticated classes for CSS targeting
+    if (dashboardPage) {
+        dashboardPage.classList.add('authenticated');
+    }
+    body.classList.add('dashboard-active');
+
     showLoading();
 
     try {
         // Get user profile with role
         const profile = await Auth.getUserProfile(user.id);
         if (!profile) {
+            console.log('No profile found, showing fallback dashboard');
             showToast('Error loading user profile', 'error');
+            // Show fallback dashboard even if profile fails
+            showFallbackDashboard(mainContent, user);
             return;
         }
 
+        console.log('Profile loaded, loading role-specific dashboard for:', profile.role);
         if (profile.role === 'farmer') {
             await loadFarmerDashboard(mainContent, profile);
         } else if (profile.role === 'vet') {
@@ -29,36 +45,145 @@ async function loadDashboardHome() {
             await loadAgrovetsDashboard(mainContent, profile);
         }
     } catch (error) {
-        mainContent.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle"></i> Error loading dashboard: ${error.message}
-            </div>
-        `;
+        console.error('Error loading dashboard:', error);
+        showToast('Error loading dashboard, showing basic view', 'warning');
+        // Show fallback dashboard on any error
+        showFallbackDashboard(mainContent, user);
     } finally {
+        // Ensure loading spinner is always hidden
+        console.log('Dashboard loaded, hiding loading spinner');
         hideLoading();
     }
+}
+
+// Fallback dashboard when API calls fail
+function showFallbackDashboard(container, user) {
+    container.innerHTML = `
+        <!-- Welcome Header -->
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-seedling fa-4x text-success"></i>
+                </div>
+                <h3>Welcome back!</h3>
+                <p class="text-muted">Your AgriTrack dashboard is ready</p>
+            </div>
+        </div>
+
+        <!-- Quick Start Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-plus-circle fa-2x text-primary mb-2"></i>
+                        <h4>Get Started</h4>
+                        <p class="text-muted mb-0">Add your first farm</p>
+                        <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadFarmsPage()">Add Farm</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-cow fa-2x text-success mb-2"></i>
+                        <h4>Livestock</h4>
+                        <p class="text-muted mb-0">Manage your animals</p>
+                        <button class="btn btn-sm btn-outline-success mt-2" onclick="loadLivestockPage()">Add Livestock</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-seedling fa-2x text-warning mb-2"></i>
+                        <h4>Crops</h4>
+                        <p class="text-muted mb-0">Track your crops</p>
+                        <button class="btn btn-sm btn-outline-warning mt-2" onclick="loadCropsPage()">Add Crops</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card dashboard-card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-chart-line fa-2x text-info mb-2"></i>
+                        <h4>Analytics</h4>
+                        <p class="text-muted mb-0">View reports</p>
+                        <button class="btn btn-sm btn-outline-info mt-2" onclick="loadSalesPage()">View Sales</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Getting Started Guide -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-lightbulb"></i> Getting Started
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="text-center">
+                                    <i class="fas fa-map-marked-alt fa-3x text-primary mb-2"></i>
+                                    <h6>1. Add Your Farms</h6>
+                                    <p class="text-muted small">Start by adding your farm locations and details</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="text-center">
+                                    <i class="fas fa-cow fa-3x text-success mb-2"></i>
+                                    <h6>2. Add Livestock</h6>
+                                    <p class="text-muted small">Register your animals and track their health</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="text-center">
+                                    <i class="fas fa-seedling fa-3x text-warning mb-2"></i>
+                                    <h6>3. Plant Crops</h6>
+                                    <p class="text-muted small">Record your crops and monitor their progress</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // Farmer Dashboard
 async function loadFarmerDashboard(container, profile) {
     const user = Auth.getCurrentUser();
 
-    // Fetch farmer's data using new API
-    const farmsResult = await API.farms.getAll();
-    const livestockResult = await API.livestock.getAll();
-    const cropsResult = await API.crops.getAll();
-    const salesResult = await API.sales.getAll();
+    try {
+        // Fetch farmer's data using new API with error handling
+        const farmsResult = await API.farms.getAll();
+        const livestockResult = await API.livestock.getAll();
+        const cropsResult = await API.crops.getAll();
+        const salesResult = await API.sales.getAll();
 
-    const farms = farmsResult.success ? farmsResult.data.farms : [];
-    const livestock = livestockResult.success ? livestockResult.data.livestock : [];
-    const crops = cropsResult.success ? cropsResult.data.crops : [];
-    const sales = salesResult.success ? salesResult.data.sales : [];
+        const farms = farmsResult.success ? farmsResult.data.farms : [];
+        const livestock = livestockResult.success ? livestockResult.data.livestock : [];
+        const crops = cropsResult.success ? cropsResult.data.crops : [];
+        const sales = salesResult.success ? salesResult.data.sales : [];
 
-    // Calculate summary stats
-    const totalRevenue = sales.reduce((sum, sale) => sum + parseFloat(sale.total_amount || 0), 0);
-    const activeCrops = crops.filter(c => c.status === 'active').length;
-    const healthyAnimals = livestock.filter(a => a.health_status === 'healthy').length;
+        // Calculate summary stats
+        const totalRevenue = sales.reduce((sum, sale) => sum + parseFloat(sale.total_amount || 0), 0);
+        const activeCrops = crops.filter(c => c.status === 'active').length;
+        const healthyAnimals = livestock.filter(a => a.health_status === 'healthy').length;
 
+        renderFarmerDashboard(container, profile, farms, livestock, crops, sales, totalRevenue, activeCrops, healthyAnimals);
+    } catch (error) {
+        console.error('Error loading farmer dashboard:', error);
+        showToast('Error loading dashboard data, showing basic view', 'warning');
+        // Show basic dashboard without API data
+        renderFarmerDashboard(container, profile, [], [], [], [], 0, 0, 0);
+    }
+}
+
+// Render farmer dashboard content
+function renderFarmerDashboard(container, profile, farms, livestock, crops, sales, totalRevenue, activeCrops, healthyAnimals) {
     container.innerHTML = `
         <!-- Welcome Header -->
         <div class="card mb-4">
@@ -163,26 +288,6 @@ async function loadFarmerDashboard(container, profile) {
             </div>
         </div>
 
-        <!-- Today's Reminders -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-bell"></i> Today's Tasks & Reminders
-                            <span class="badge bg-info ms-2">${getTodayReminders(user.id).length}</span>
-                        </div>
-                        <button class="btn btn-sm btn-outline-primary" onclick="showAddReminderModal('${profile.role}')">
-                            <i class="fas fa-plus"></i> Add Task
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        ${renderRemindersList(user.id)}
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Quick Actions -->
         <div class="row mt-4">
             <div class="col-12">
@@ -222,17 +327,28 @@ async function loadFarmerDashboard(container, profile) {
 
 // Vet Dashboard
 async function loadVetDashboard(container, profile) {
-    const farmsResult = await API.farms.getAll();
-    const healthRecordsResult = await API.healthRecords.getAll();
-    const associationsResult = await API.associations.getAll();
+    try {
+        const farmsResult = await API.farms.getAll();
+        const healthRecordsResult = await API.healthRecords.getAll();
+        const associationsResult = await API.associations.getAll();
 
-    const farms = farmsResult.success ? farmsResult.data.farms : [];
-    const healthRecords = healthRecordsResult.success ? healthRecordsResult.data.health_records : [];
-    const associations = associationsResult.success ? associationsResult.data.associations : [];
+        const farms = farmsResult.success ? farmsResult.data.farms : [];
+        const healthRecords = healthRecordsResult.success ? healthRecordsResult.data.health_records : [];
+        const associations = associationsResult.success ? associationsResult.data.associations : [];
 
-    const pendingInvitations = associations.filter(a => a.invitation_status === 'pending').length;
-    const acceptedAssociations = associations.filter(a => a.invitation_status === 'accepted').length;
+        const pendingInvitations = associations.filter(a => a.invitation_status === 'pending').length;
+        const acceptedAssociations = associations.filter(a => a.invitation_status === 'accepted').length;
 
+        renderVetDashboard(container, profile, farms, healthRecords, associations, acceptedAssociations, pendingInvitations);
+    } catch (error) {
+        console.error('Error loading vet dashboard:', error);
+        showToast('Error loading dashboard data, showing basic view', 'warning');
+        renderVetDashboard(container, profile, [], [], [], 0, 0);
+    }
+}
+
+// Render vet dashboard content
+function renderVetDashboard(container, profile, farms, healthRecords, associations, acceptedAssociations, pendingInvitations) {
     container.innerHTML = `
         <!-- Welcome Header -->
         <div class="card mb-4">
@@ -329,26 +445,6 @@ async function loadVetDashboard(container, profile) {
             </div>
         </div>
 
-        <!-- Today's Reminders -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-bell"></i> Today's Tasks & Reminders
-                            <span class="badge bg-info ms-2">${getTodayReminders(profile.id).length}</span>
-                        </div>
-                        <button class="btn btn-sm btn-outline-primary" onclick="showAddReminderModal('${profile.role}')">
-                            <i class="fas fa-plus"></i> Add Task
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        ${renderRemindersList(profile.id)}
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Quick Actions -->
         <div class="row mt-4">
             <div class="col-12">
@@ -383,17 +479,28 @@ async function loadVetDashboard(container, profile) {
 
 // Agrovets Dashboard
 async function loadAgrovetsDashboard(container, profile) {
-    const listingsResult = await API.marketplace.getMyListings();
-    const inquiriesResult = await API.marketplace.getInquiries();
-    const analyticsResult = await API.marketplace.getAnalytics();
+    try {
+        const listingsResult = await API.marketplace.getMyListings();
+        const inquiriesResult = await API.marketplace.getInquiries();
+        const analyticsResult = await API.marketplace.getAnalytics();
 
-    const listings = listingsResult.success ? listingsResult.data.listings : [];
-    const inquiries = inquiriesResult.success ? inquiriesResult.data.inquiries : [];
-    const analytics = analyticsResult.success ? analyticsResult.data.analytics : {};
+        const listings = listingsResult.success ? listingsResult.data.listings : [];
+        const inquiries = inquiriesResult.success ? inquiriesResult.data.inquiries : [];
+        const analytics = analyticsResult.success ? analyticsResult.data.analytics : {};
 
-    const activeListings = listings.filter(l => l.status === 'active').length;
-    const openInquiries = inquiries.filter(i => i.status === 'open').length;
+        const activeListings = listings.filter(l => l.status === 'active').length;
+        const openInquiries = inquiries.filter(i => i.status === 'open').length;
 
+        renderAgrovetsDashboard(container, profile, listings, inquiries, analytics, activeListings, openInquiries);
+    } catch (error) {
+        console.error('Error loading agrovets dashboard:', error);
+        showToast('Error loading dashboard data, showing basic view', 'warning');
+        renderAgrovetsDashboard(container, profile, [], [], {}, 0, 0);
+    }
+}
+
+// Render agrovets dashboard content
+function renderAgrovetsDashboard(container, profile, listings, inquiries, analytics, activeListings, openInquiries) {
     container.innerHTML = `
         <!-- Welcome Header -->
         <div class="card mb-4">
@@ -446,80 +553,8 @@ async function loadAgrovetsDashboard(container, profile) {
             </div>
         </div>
 
-        <!-- Recent Activity -->
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fas fa-chart-bar"></i> Product Categories
-                    </div>
-                    <div class="card-body">
-                        ${analytics.by_category && Object.keys(analytics.by_category).length > 0 ? `
-                            ${Object.entries(analytics.by_category).map(([category, data]) => `
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span class="text-capitalize">${category}</span>
-                                        <span>${data.count} products (${data.views} views)</span>
-                                    </div>
-                                    <div class="progress" style="height: 8px;">
-                                        <div class="progress-bar bg-success" style="width: ${analytics.total_listings > 0 ? (data.count / analytics.total_listings * 100) : 0}%"></div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        ` : '<p class="text-muted">No products listed yet. <a href="#" onclick="showAddProductModal(); return false;">Add your first product</a></p>'}
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fas fa-comments"></i> Recent Customer Inquiries
-                    </div>
-                    <div class="card-body">
-                        ${inquiries.length > 0 ? `
-                            <div class="list-group list-group-flush">
-                                ${inquiries.slice(0, 3).map(inquiry => `
-                                    <div class="list-group-item">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <strong>${inquiry.marketplace_listings?.product_name || 'Product'}</strong>
-                                                <br><small class="text-muted">From: ${inquiry.users?.full_name || 'Customer'}</small>
-                                                <br><small class="text-muted">${formatDate(inquiry.created_at)}</small>
-                                            </div>
-                                            <span class="badge bg-${inquiry.status === 'open' ? 'warning' : inquiry.status === 'responded' ? 'info' : 'success'}">${inquiry.status}</span>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        ` : '<p class="text-muted">No inquiries yet.</p>'}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Today's Reminders -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-bell"></i> Today's Tasks & Reminders
-                            <span class="badge bg-info ms-2">${getTodayReminders(profile.id).length}</span>
-                        </div>
-                        <button class="btn btn-sm btn-outline-primary" onclick="showAddReminderModal('${profile.role}')">
-                            <i class="fas fa-plus"></i> Add Task
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        ${renderRemindersList(profile.id)}
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Quick Actions -->
-        <div class="row mt-4">
+        <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
