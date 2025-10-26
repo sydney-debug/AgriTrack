@@ -71,6 +71,21 @@ Fixed the infinite recursion error in Row Level Security policies that was preve
 - ✅ **Safe to run multiple times** - Added `DROP IF EXISTS` for all objects
 - ✅ **No more "already exists" errors** - Indexes, triggers, and policies are handled gracefully
 
+**Enhanced Login UX:**
+- ✅ **Login form hides immediately** after successful authentication
+- ✅ **Dashboard shows instantly** with proper navigation
+- ✅ **Multiple hiding methods** ensure login elements are completely hidden
+- ✅ **CSS safety measures** prevent login elements from showing when they shouldn't
+- ✅ **Consistent behavior** across all login methods (landing page, login page, auth state changes)
+
+**Current limitations:**
+- 🔄 Vet access to farms is temporarily disabled (farmers only)
+- 🔄 Farm-vet associations work but without RLS security (temporary)
+
+**Next steps:**
+- Implement proper vet access policies without circular dependencies
+- Restore full functionality while maintaining security
+
 ## Usage
 
 ### First-Time Setup
