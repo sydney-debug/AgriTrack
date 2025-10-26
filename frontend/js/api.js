@@ -5,7 +5,7 @@ const API = {
     farms: {
         getAll: async () => {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabase
                     .from('farms')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -20,8 +20,8 @@ const API = {
 
         create: async (farmData) => {
             try {
-                const user = Auth.getCurrentUser();
-                const { data, error } = await supabase
+                const user = await Auth.getCurrentUser();
+                const { data, error } = await window.supabase
                     .from('farms')
                     .insert({
                         farmer_id: user.id,
@@ -40,7 +40,7 @@ const API = {
 
         update: async (id, farmData) => {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabase
                     .from('farms')
                     .update(farmData)
                     .eq('id', id)
@@ -57,7 +57,7 @@ const API = {
 
         delete: async (id) => {
             try {
-                const { error } = await supabase
+                const { error } = await window.supabase
                     .from('farms')
                     .delete()
                     .eq('id', id);
@@ -75,7 +75,7 @@ const API = {
     livestock: {
         getAll: async () => {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabase
                     .from('livestock')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -90,10 +90,10 @@ const API = {
 
         create: async (livestockData) => {
             try {
-                const user = Auth.getCurrentUser();
+                const user = await Auth.getCurrentUser();
                 const profile = await Auth.getUserProfile(user.id);
 
-                const { data, error } = await supabase
+                const { data, error } = await window.supabase
                     .from('livestock')
                     .insert({
                         farm_id: livestockData.farm_id,
@@ -115,7 +115,7 @@ const API = {
     healthRecords: {
         getAll: async () => {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabase
                     .from('health_records')
                     .select('*')
                     .order('record_date', { ascending: false });
@@ -130,10 +130,10 @@ const API = {
 
         create: async (recordData) => {
             try {
-                const user = Auth.getCurrentUser();
+                const user = await Auth.getCurrentUser();
                 const profile = await Auth.getUserProfile(user.id);
 
-                const { data, error } = await supabase
+                const { data, error } = await window.supabase
                     .from('health_records')
                     .insert({
                         vet_id: profile.role === 'vet' ? user.id : recordData.vet_id,
@@ -155,7 +155,7 @@ const API = {
     sales: {
         getAll: async () => {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabase
                     .from('sales')
                     .select('*')
                     .order('sale_date', { ascending: false });
@@ -170,8 +170,8 @@ const API = {
 
         create: async (saleData) => {
             try {
-                const user = Auth.getCurrentUser();
-                const { data, error } = await supabase
+                const user = await Auth.getCurrentUser();
+                const { data, error } = await window.supabase
                     .from('sales')
                     .insert({
                         farm_id: saleData.farm_id,
@@ -193,7 +193,7 @@ const API = {
     crops: {
         getAll: async () => {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabase
                     .from('crops')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -208,8 +208,8 @@ const API = {
 
         create: async (cropData) => {
             try {
-                const user = Auth.getCurrentUser();
-                const { data, error } = await supabase
+                const user = await Auth.getCurrentUser();
+                const { data, error } = await window.supabase
                     .from('crops')
                     .insert({
                         farm_id: cropData.farm_id,
@@ -231,7 +231,7 @@ const API = {
     inventory: {
         getAll: async () => {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabase
                     .from('inventory')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -249,8 +249,8 @@ const API = {
     marketplace: {
         getMyListings: async () => {
             try {
-                const user = Auth.getCurrentUser();
-                const { data, error } = await supabase
+                const user = await Auth.getCurrentUser();
+                const { data, error } = await window.supabase
                     .from('marketplace_listings')
                     .select('*')
                     .eq('agrovets_id', user.id)
@@ -266,16 +266,16 @@ const API = {
 
         getInquiries: async () => {
             try {
-                const user = Auth.getCurrentUser();
+                const user = await Auth.getCurrentUser();
                 const profile = await Auth.getUserProfile(user.id);
 
-                let query = supabase.from('marketplace_inquiries').select('*');
+                let query = window.supabase.from('marketplace_inquiries').select('*');
 
                 if (profile.role === 'farmer') {
                     query = query.eq('farmer_id', user.id);
                 } else if (profile.role === 'agrovets') {
                     // Get inquiries for agrovets' listings
-                    const { data: listings } = await supabase
+                    const { data: listings } = await window.supabase
                         .from('marketplace_listings')
                         .select('id')
                         .eq('agrovets_id', user.id);
@@ -298,8 +298,8 @@ const API = {
 
         getAnalytics: async () => {
             try {
-                const user = Auth.getCurrentUser();
-                const { data, error } = await supabase
+                const user = await Auth.getCurrentUser();
+                const { data, error } = await window.supabase
                     .from('marketplace_listings')
                     .select('category, views_count')
                     .eq('agrovets_id', user.id);
@@ -333,14 +333,14 @@ const API = {
     associations: {
         getAll: async () => {
             try {
-                const user = Auth.getCurrentUser();
+                const user = await Auth.getCurrentUser();
                 const profile = await Auth.getUserProfile(user.id);
 
-                let query = supabase.from('farm_vet_associations').select('*');
+                let query = window.supabase.from('farm_vet_associations').select('*');
 
                 if (profile.role === 'farmer') {
                     // Get farms for this farmer and their associations
-                    const { data: farms } = await supabase
+                    const { data: farms } = await window.supabase
                         .from('farms')
                         .select('id')
                         .eq('farmer_id', user.id);

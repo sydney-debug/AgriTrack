@@ -16,3 +16,42 @@ if (CONFIG.SUPABASE_ANON_KEY.includes('8AkJbTeDOIXQMT34KsqFnKBlpgHd-G24-MQzYKWGH
     console.error('🔑 Please get a fresh API key from: https://supabase.com/dashboard/project/txgkmhjumamvcavvsolp/settings/api');
     console.error('📝 Update the key in frontend/js/config.js');
 }
+
+// Initialize Supabase client
+let supabase;
+try {
+    if (typeof window !== 'undefined' && window.supabase) {
+        supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+        console.log('✅ Supabase client initialized successfully');
+        console.log('🔗 Supabase URL:', CONFIG.SUPABASE_URL);
+        console.log('🔑 API Key status:', CONFIG.SUPABASE_ANON_KEY.includes('8AkJbTeDOIXQMT34KsqFnKBlpgHd-G24-MQzYKWGHy0') ? '⚠️ EXPIRED - Needs update' : '✅ Valid');
+    } else {
+        console.error('❌ Supabase library not loaded');
+    }
+} catch (error) {
+    console.error('❌ Error initializing Supabase client:', error);
+}
+
+// Make supabase available globally
+if (typeof window !== 'undefined') {
+    window.supabase = supabase;
+}
+
+// Test connection on page load
+if (typeof window !== 'undefined' && window.supabase) {
+    setTimeout(async () => {
+        try {
+            const { data, error } = await window.supabase.auth.getSession();
+            if (error) {
+                console.log('🔍 Session check:', error.message);
+                if (error.message.includes('Invalid API key')) {
+                    console.error('❌ API key is invalid! Please update in config.js');
+                }
+            } else {
+                console.log('✅ Session check successful');
+            }
+        } catch (err) {
+            console.log('🔍 Connection test:', err.message);
+        }
+    }, 1000);
+}

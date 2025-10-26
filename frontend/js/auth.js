@@ -3,8 +3,15 @@
 const Auth = {
     // Initialize Supabase Auth
     async init() {
+        // Check if supabase is available
+        if (!window.supabase) {
+            console.error('❌ Supabase client not available');
+            showErrorModal();
+            return;
+        }
+
         // Listen for auth state changes
-        supabase.auth.onAuthStateChange(async (event, session) => {
+        window.supabase.auth.onAuthStateChange(async (event, session) => {
             console.log('Auth state changed:', event, session);
 
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -22,7 +29,7 @@ const Auth = {
         const user = session.user;
 
         // Check if user profile exists in our users table
-        const { data: profile, error } = await supabase
+        const { data: profile, error } = await window.supabase
             .from('users')
             .select('*')
             .eq('id', user.id)
@@ -46,7 +53,7 @@ const Auth = {
 
     // Create user profile in our database
     async createUserProfile(user, role) {
-        const { error } = await supabase
+        const { error } = await window.supabase
             .from('users')
             .insert({
                 id: user.id,
@@ -63,7 +70,7 @@ const Auth = {
     // Check if user is authenticated
     isAuthenticated() {
         try {
-            return !!supabase.auth.getSession();
+            return !!window.supabase.auth.getSession();
         } catch (error) {
             console.error('Auth check error:', error);
             return false;
@@ -73,7 +80,7 @@ const Auth = {
     // Get current user with error handling
     async getCurrentUser() {
         try {
-            const { data: { session }, error } = await supabase.auth.getSession();
+            const { data: { session }, error } = await window.supabase.auth.getSession();
             if (error) {
                 console.error('Get session error:', error);
                 return null;
@@ -88,7 +95,7 @@ const Auth = {
     // Get user profile from database with error handling
     async getUserProfile(userId) {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await window.supabase
                 .from('users')
                 .select('*')
                 .eq('id', userId)
@@ -109,7 +116,7 @@ const Auth = {
     // Login with email and password
     async login(email, password) {
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await window.supabase.auth.signInWithPassword({
                 email,
                 password
             });
@@ -143,7 +150,7 @@ const Auth = {
     // Signup with email, password, and role
     async signup(userData) {
         try {
-            const { data, error } = await supabase.auth.signUp({
+            const { data, error } = await window.supabase.auth.signUp({
                 email: userData.email,
                 password: userData.password,
                 options: {
@@ -187,7 +194,7 @@ const Auth = {
     // Logout
     async logout() {
         try {
-            const { error } = await supabase.auth.signOut();
+            const { error } = await window.supabase.auth.signOut();
             if (error) {
                 console.error('Logout error:', error);
             }
@@ -215,7 +222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Check current session with proper error handling
     try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await window.supabase.auth.getSession();
         if (error) {
             console.error('Session check error:', error);
             if (error.message.includes('Invalid API key')) {
@@ -264,6 +271,9 @@ function showErrorModal() {
                         </ol>
                         <div class="alert alert-warning">
                             <strong>Note:</strong> This is a demo project. In production, API keys should be managed securely as environment variables.
+                        </div>
+                        <div class="alert alert-info">
+                            <strong>Console Output:</strong> Check the browser console for detailed error information.
                         </div>
                     </div>
                     <div class="modal-footer">
