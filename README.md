@@ -56,20 +56,24 @@ A comprehensive web-based farm management system built with Node.js, Express, Su
 - PostgreSQL (via Supabase)
 - Row Level Security (RLS) for data protection
 
-## Getting Started
+## 🔧 **Recent Fixes**
 
-### Prerequisites
-- Modern web browser with JavaScript enabled
-- Internet connection
+### **✅ Infinite Recursion in RLS Policies - RESOLVED**
+Fixed the infinite recursion error in Row Level Security policies that was preventing access to farms, inventory, and other tables. The issue was caused by circular dependencies between the `farms` and `farm_vet_associations` tables.
 
-### Quick Start
+**What was fixed:**
+- ✅ Disabled RLS on `farm_vet_associations` table to break the circular dependency
+- ✅ Simplified farms policies to use direct ownership checks
+- ✅ Removed vet access references that caused recursion
+- ✅ All tabs (farms, inventory, livestock, etc.) now work without errors
 
-1. **Open the application** in your web browser
-2. **Sign up** for a new account or **login** if you already have one
-3. **Select your role** (Farmer, Veterinarian, or Agrovets)
-4. **Start managing** your agricultural operations
+**Current limitations:**
+- 🔄 Vet access to farms is temporarily disabled (farmers only)
+- 🔄 Farm-vet associations work but without RLS security (temporary)
 
-The application is ready to use immediately - no additional configuration required!
+**Next steps:**
+- Implement proper vet access policies without circular dependencies
+- Restore full functionality while maintaining security
 
 ## Usage
 
