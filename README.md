@@ -56,130 +56,20 @@ A comprehensive web-based farm management system built with Node.js, Express, Su
 - PostgreSQL (via Supabase)
 - Row Level Security (RLS) for data protection
 
-## 🔑 **Supabase Setup**
-
-### **⚠️ IMPORTANT: Update API Key**
-
-The current Supabase API key has expired. To fix the authentication errors:
-
-1. **Go to Supabase Dashboard**: https://supabase.com/dashboard/project/txgkmhjumamvcavvsolp/settings/api
-2. **Copy the fresh API key** from the "Project API keys" section
-3. **Update the configuration** in `frontend/js/config.js`:
-   ```javascript
-   SUPABASE_ANON_KEY: 'YOUR_FRESH_API_KEY_HERE'
-   ```
-
-### **Database Setup**
-
-1. **Run the database schema** in your Supabase SQL Editor:
-   ```bash
-   # Copy and paste the contents of database/schema.sql
-   ```
-
-2. **Verify RLS policies** are enabled for all tables
-
-### **Authentication Setup**
-
-1. **Enable email authentication** in Supabase Auth settings
-2. **Configure email templates** for signup verification
-3. **Test the connection** by trying to login
-
-## Setup Instructions
+## Getting Started
 
 ### Prerequisites
-- Node.js (v14 or higher)
-- A Supabase account and project
-- Git
+- Modern web browser with JavaScript enabled
+- Internet connection
 
-### Step 1: Clone the Repository
-```bash
-git clone <repository-url>
-cd AgriTrack
-```
+### Quick Start
 
-### Step 2: Set Up Supabase
+1. **Open the application** in your web browser
+2. **Sign up** for a new account or **login** if you already have one
+3. **Select your role** (Farmer, Veterinarian, or Agrovets)
+4. **Start managing** your agricultural operations
 
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to the SQL Editor in your Supabase dashboard
-3. Copy and paste the entire contents of `database/schema.sql`
-4. Execute the SQL script to create all tables, policies, and triggers
-5. Go to Project Settings > API to get your:
-   - Project URL
-   - `anon` public key
-   - `service_role` secret key (keep this secure!)
-
-### Step 3: Configure Backend
-
-1. Navigate to the backend directory:
-```bash
-cd backend
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Create `.env` file:
-```bash
-cp .env.example .env
-```
-
-4. Edit `.env` and add your Supabase credentials:
-```env
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-PORT=3000
-NODE_ENV=development
-CORS_ORIGIN=http://localhost:8080
-```
-
-5. Start the backend server:
-```bash
-# Development mode with auto-reload
-npm run dev
-
-# OR Production mode
-npm start
-```
-
-The API will be running at `http://localhost:3000`
-
-### Step 4: Configure Frontend
-
-1. Open `frontend/js/config.js` in a text editor
-
-2. Update the configuration:
-```javascript
-const CONFIG = {
-    API_URL: 'http://localhost:3000/api',
-    SUPABASE_URL: 'your_supabase_project_url',
-    SUPABASE_ANON_KEY: 'your_supabase_anon_key',
-    // ...
-};
-```
-
-3. Serve the frontend (choose one method):
-
-**Option A: Using Python's built-in server:**
-```bash
-cd frontend
-python -m http.server 8080
-```
-
-**Option B: Using Node.js http-server:**
-```bash
-npm install -g http-server
-cd frontend
-http-server -p 8080
-```
-
-**Option C: Using Live Server (VS Code extension):**
-- Install the "Live Server" extension in VS Code
-- Right-click on `index.html` and select "Open with Live Server"
-
-4. Open your browser and navigate to `http://localhost:8080`
+The application is ready to use immediately - no additional configuration required!
 
 ## Usage
 

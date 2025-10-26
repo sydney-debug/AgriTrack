@@ -270,7 +270,7 @@ function showErrorModal() {
                             <li>Refresh the page</li>
                         </ol>
                         <div class="alert alert-warning">
-                            <strong>Note:</strong> This is a demo project. In production, API keys should be managed securely as environment variables.
+                            <strong>Note:</strong> API keys should be managed securely in production environments.
                         </div>
                         <div class="alert alert-info">
                             <strong>Console Output:</strong> Check the browser console for detailed error information.
