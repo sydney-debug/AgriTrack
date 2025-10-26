@@ -72,7 +72,7 @@ const Auth = {
             if (dashboardPage) {
                 dashboardPage.style.display = 'block';
                 dashboardPage.style.visibility = 'visible';
-                dashboardPage.classList.add('authenticated');
+                dashboardPage.classList.add('authenticated', 'dashboard-compact');
             }
 
             if (mainNav) {
@@ -144,7 +144,7 @@ const Auth = {
 
         // Remove authenticated classes
         if (dashboardElement) {
-            dashboardElement.classList.remove('authenticated');
+            dashboardElement.classList.remove('authenticated', 'dashboard-compact');
         }
         const bodyElement = document.body;
         bodyElement.classList.remove('dashboard-active');
@@ -462,7 +462,7 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
             if (dashboardPage) {
                 dashboardPage.style.display = 'block';
                 dashboardPage.style.visibility = 'visible';
-                dashboardPage.classList.add('authenticated');
+                dashboardPage.classList.add('authenticated', 'dashboard-compact');
             }
 
             if (mainNav) {
@@ -560,7 +560,7 @@ document.getElementById('landingLoginForm')?.addEventListener('submit', async (e
             if (dashboardPage) {
                 dashboardPage.style.display = 'block';
                 dashboardPage.style.visibility = 'visible';
-                dashboardPage.classList.add('authenticated');
+                dashboardPage.classList.add('authenticated', 'dashboard-compact');
             }
 
             if (mainNav) {

@@ -19,7 +19,7 @@ async function loadDashboardHome() {
 
     // Add authenticated classes for CSS targeting
     if (dashboardPage) {
-        dashboardPage.classList.add('authenticated');
+        dashboardPage.classList.add('authenticated', 'dashboard-compact');
     }
     body.classList.add('dashboard-active');
 
@@ -60,18 +60,18 @@ async function loadDashboardHome() {
 function showFallbackDashboard(container, user) {
     container.innerHTML = `
         <!-- Welcome Header -->
-        <div class="card mb-4">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <i class="fas fa-seedling fa-4x text-success"></i>
+        <div class="card mb-2">
+            <div class="card-body text-center py-3">
+                <div class="mb-2">
+                    <i class="fas fa-seedling fa-2x text-success"></i>
                 </div>
-                <h3>Welcome back!</h3>
-                <p class="text-muted">Your AgriTrack dashboard is ready</p>
+                <h5 class="mb-1">Welcome back!</h5>
+                <p class="text-muted small mb-0">Your AgriTrack dashboard is ready</p>
             </div>
         </div>
 
         <!-- Quick Start Cards -->
-        <div class="row mb-4">
+        <div class="row mb-3">
             <div class="col-md-3">
                 <div class="card dashboard-card text-center h-100">
                     <div class="card-body">
@@ -118,30 +118,30 @@ function showFallbackDashboard(container, user) {
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header py-2">
                         <i class="fas fa-lightbulb"></i> Getting Started
                     </div>
-                    <div class="card-body">
+                    <div class="card-body py-3">
                         <div class="row">
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4 mb-2">
                                 <div class="text-center">
-                                    <i class="fas fa-map-marked-alt fa-3x text-primary mb-2"></i>
-                                    <h6>1. Add Your Farms</h6>
-                                    <p class="text-muted small">Start by adding your farm locations and details</p>
+                                    <i class="fas fa-map-marked-alt fa-2x text-primary mb-1"></i>
+                                    <h6 class="mb-1">1. Add Your Farms</h6>
+                                    <p class="text-muted small mb-0">Start by adding your farm locations and details</p>
                                 </div>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4 mb-2">
                                 <div class="text-center">
-                                    <i class="fas fa-cow fa-3x text-success mb-2"></i>
-                                    <h6>2. Add Livestock</h6>
-                                    <p class="text-muted small">Register your animals and track their health</p>
+                                    <i class="fas fa-cow fa-2x text-success mb-1"></i>
+                                    <h6 class="mb-1">2. Add Livestock</h6>
+                                    <p class="text-muted small mb-0">Register your animals and track their health</p>
                                 </div>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4 mb-2">
                                 <div class="text-center">
-                                    <i class="fas fa-seedling fa-3x text-warning mb-2"></i>
-                                    <h6>3. Plant Crops</h6>
-                                    <p class="text-muted small">Record your crops and monitor their progress</p>
+                                    <i class="fas fa-seedling fa-2x text-warning mb-1"></i>
+                                    <h6 class="mb-1">3. Plant Crops</h6>
+                                    <p class="text-muted small mb-0">Record your crops and monitor their progress</p>
                                 </div>
                             </div>
                         </div>
@@ -186,18 +186,18 @@ async function loadFarmerDashboard(container, profile) {
 function renderFarmerDashboard(container, profile, farms, livestock, crops, sales, totalRevenue, activeCrops, healthyAnimals) {
     container.innerHTML = `
         <!-- Welcome Header -->
-        <div class="card mb-4">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <i class="fas fa-tractor fa-4x text-success"></i>
+        <div class="card mb-2">
+            <div class="card-body text-center py-3">
+                <div class="mb-2">
+                    <i class="fas fa-tractor fa-2x text-success"></i>
                 </div>
-                <h3>Welcome back, ${profile.full_name}!</h3>
-                <p class="text-muted">Here's your farm overview for today</p>
+                <h5 class="mb-1">Welcome back, ${profile.full_name}!</h5>
+                <p class="text-muted small mb-0">Here's your farm overview for today</p>
             </div>
         </div>
 
         <!-- Farm Summary Cards -->
-        <div class="row mb-4">
+        <div class="row mb-3">
             <div class="col-md-3">
                 <div class="card dashboard-card text-center h-100">
                     <div class="card-body">
@@ -289,30 +289,30 @@ function renderFarmerDashboard(container, profile, farms, livestock, crops, sale
         </div>
 
         <!-- Quick Actions -->
-        <div class="row mt-4">
+        <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header py-2">
                         <i class="fas fa-tasks"></i> Quick Actions
                     </div>
-                    <div class="card-body">
+                    <div class="card-body py-3">
                         <div class="row">
-                            <div class="col-md-3 mb-3">
+                            <div class="col-md-3 mb-2">
                                 <button class="btn btn-outline-success w-100" onclick="loadFarmsPage()">
                                     <i class="fas fa-plus"></i><br>Manage Farms
                                 </button>
                             </div>
-                            <div class="col-md-3 mb-3">
+                            <div class="col-md-3 mb-2">
                                 <button class="btn btn-outline-success w-100" onclick="loadLivestockPage()">
                                     <i class="fas fa-plus"></i><br>Add Livestock
                                 </button>
                             </div>
-                            <div class="col-md-3 mb-3">
+                            <div class="col-md-3 mb-2">
                                 <button class="btn btn-outline-success w-100" onclick="loadSalesPage()">
                                     <i class="fas fa-plus"></i><br>Record Sale
                                 </button>
                             </div>
-                            <div class="col-md-3 mb-3">
+                            <div class="col-md-3 mb-2">
                                 <button class="btn btn-outline-success w-100" onclick="loadMarketplacePage()">
                                     <i class="fas fa-store"></i><br>Browse Marketplace
                                 </button>
@@ -351,18 +351,18 @@ async function loadVetDashboard(container, profile) {
 function renderVetDashboard(container, profile, farms, healthRecords, associations, acceptedAssociations, pendingInvitations) {
     container.innerHTML = `
         <!-- Welcome Header -->
-        <div class="card mb-4">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <i class="fas fa-user-md fa-4x text-primary"></i>
+        <div class="card mb-2">
+            <div class="card-body text-center py-3">
+                <div class="mb-2">
+                    <i class="fas fa-user-md fa-2x text-primary"></i>
                 </div>
-                <h3>Welcome back, Dr. ${profile.full_name}!</h3>
-                <p class="text-muted">Here's your veterinary practice overview</p>
+                <h5 class="mb-1">Welcome back, Dr. ${profile.full_name}!</h5>
+                <p class="text-muted small mb-0">Here's your veterinary practice overview</p>
             </div>
         </div>
 
         <!-- Stats Cards -->
-        <div class="row mb-4">
+        <div class="row mb-3">
             <div class="col-md-4">
                 <div class="card dashboard-card text-center h-100">
                     <div class="card-body">
@@ -446,25 +446,25 @@ function renderVetDashboard(container, profile, farms, healthRecords, associatio
         </div>
 
         <!-- Quick Actions -->
-        <div class="row mt-4">
+        <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header py-2">
                         <i class="fas fa-tasks"></i> Quick Actions
                     </div>
-                    <div class="card-body">
+                    <div class="card-body py-3">
                         <div class="row">
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4 mb-2">
                                 <button class="btn btn-outline-primary w-100" onclick="loadHealthRecordsPage()">
                                     <i class="fas fa-heartbeat"></i><br>Health Records
                                 </button>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4 mb-2">
                                 <button class="btn btn-outline-primary w-100" onclick="loadLivestockPage()">
                                     <i class="fas fa-cow"></i><br>Livestock
                                 </button>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4 mb-2">
                                 <button class="btn btn-outline-info w-100" onclick="loadAssociationsPage()">
                                     <i class="fas fa-handshake"></i><br>Farm Associations
                                 </button>
@@ -503,18 +503,18 @@ async function loadAgrovetsDashboard(container, profile) {
 function renderAgrovetsDashboard(container, profile, listings, inquiries, analytics, activeListings, openInquiries) {
     container.innerHTML = `
         <!-- Welcome Header -->
-        <div class="card mb-4">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <i class="fas fa-store fa-4x text-success"></i>
+        <div class="card mb-2">
+            <div class="card-body text-center py-3">
+                <div class="mb-2">
+                    <i class="fas fa-store fa-2x text-success"></i>
                 </div>
-                <h3>Welcome back, ${profile.full_name}!</h3>
-                <p class="text-muted">Here's your business overview</p>
+                <h5 class="mb-1">Welcome back, ${profile.full_name}!</h5>
+                <p class="text-muted small mb-0">Here's your business overview</p>
             </div>
         </div>
 
         <!-- Business Stats -->
-        <div class="row mb-4">
+        <div class="row mb-3">
             <div class="col-md-3">
                 <div class="card dashboard-card text-center h-100">
                     <div class="card-body">
@@ -557,22 +557,22 @@ function renderAgrovetsDashboard(container, profile, listings, inquiries, analyt
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header py-2">
                         <i class="fas fa-tasks"></i> Quick Actions
                     </div>
-                    <div class="card-body">
+                    <div class="card-body py-3">
                         <div class="row">
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4 mb-2">
                                 <button class="btn btn-outline-success w-100" onclick="showAddProductModal()">
                                     <i class="fas fa-plus"></i><br>Add New Product
                                 </button>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4 mb-2">
                                 <button class="btn btn-outline-primary w-100" onclick="loadMyListingsPage()">
                                     <i class="fas fa-list"></i><br>Manage Listings
                                 </button>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-4 mb-2">
                                 <button class="btn btn-outline-info w-100" onclick="loadInquiriesPage()">
                                     <i class="fas fa-envelope"></i><br>View Inquiries
                                 </button>

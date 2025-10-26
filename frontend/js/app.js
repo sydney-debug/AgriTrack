@@ -24,7 +24,7 @@ function showLanding() {
         dashboardPage.style.display = 'none';
         dashboardPage.style.visibility = 'hidden';
         // Remove authenticated classes
-        dashboardPage.classList.remove('authenticated');
+        dashboardPage.classList.remove('authenticated', 'dashboard-compact');
     }
 
     if (profilePage) {
@@ -188,7 +188,7 @@ function showDashboard() {
     if (dashboardPage) {
         dashboardPage.style.display = 'block';
         dashboardPage.style.visibility = 'visible';
-        dashboardPage.classList.add('authenticated');
+        dashboardPage.classList.add('authenticated', 'dashboard-compact');
     }
 
     if (mainNav) {
